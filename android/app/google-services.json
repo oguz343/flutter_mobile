@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "69795522920",
+    "project_id": "odev-sistemi-523f2",
+    "storage_bucket": "odev-sistemi-523f2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:69795522920:android:5cfd0d5f67dcc312bb8edd",
+        "android_client_info": {
+          "package_name": "com.example.flutter_mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANdmNez8bdoFA7oyE5jtUbZQVrIFSQO3U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

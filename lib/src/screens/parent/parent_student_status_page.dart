@@ -10,10 +10,7 @@ import '../../widgets/smart_link_text.dart';
 class ParentStudentStatusPage extends StatelessWidget {
   final Color accent;
 
-  const ParentStudentStatusPage({
-    super.key,
-    required this.accent,
-  });
+  const ParentStudentStatusPage({super.key, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +30,7 @@ class ParentStudentStatusPage extends StatelessWidget {
       stream: service.watchParentStudent(parent),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
@@ -46,11 +41,9 @@ class ParentStudentStatusPage extends StatelessWidget {
           );
         }
 
-        final data = snapshot.data ??
-            const ParentStudentBundle(
-              student: null,
-              assignments: [],
-            );
+        final data =
+            snapshot.data ??
+            const ParentStudentBundle(student: null, assignments: []);
 
         final student = data.student;
 
@@ -113,7 +106,8 @@ class ParentStudentStatusPage extends StatelessWidget {
               const SizedBox(height: 16),
               const _SectionTitle(
                 title: 'Ödev ve Teslim Durumu',
-                subtitle: 'Bağlı öğrencinin ödev, teslim, not ve geri dönüşleri',
+                subtitle:
+                    'Bağlı öğrencinin ödev, teslim, not ve geri dönüşleri',
               ),
               const SizedBox(height: 10),
               if (data.assignments.isEmpty)
@@ -127,10 +121,7 @@ class ParentStudentStatusPage extends StatelessWidget {
                 ...data.assignments.map(
                   (item) => Padding(
                     padding: const EdgeInsets.only(bottom: 13),
-                    child: _AssignmentStatusCard(
-                      item: item,
-                      accent: accent,
-                    ),
+                    child: _AssignmentStatusCard(item: item, accent: accent),
                   ),
                 ),
             ],
@@ -164,10 +155,7 @@ class _Hero extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            accent,
-            const Color(0xFFF97316),
-          ],
+          colors: [accent, const Color(0xFFF97316)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -206,7 +194,7 @@ class _Hero extends StatelessWidget {
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
                     fontSize: 25,
-                    letterSpacing: -0.7,
+                    letterSpacing: 0,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -248,19 +236,13 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            color: color,
-            size: 28,
-          ),
+          Icon(icon, color: color, size: 28),
           const Spacer(),
           Text(
             value,
@@ -268,7 +250,7 @@ class _StatCard extends StatelessWidget {
               color: AppTheme.dark,
               fontWeight: FontWeight.w900,
               fontSize: 28,
-              letterSpacing: -0.8,
+              letterSpacing: 0,
             ),
           ),
           Text(
@@ -289,10 +271,7 @@ class _SectionTitle extends StatelessWidget {
   final String title;
   final String subtitle;
 
-  const _SectionTitle({
-    required this.title,
-    required this.subtitle,
-  });
+  const _SectionTitle({required this.title, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -305,7 +284,7 @@ class _SectionTitle extends StatelessWidget {
             color: AppTheme.dark,
             fontWeight: FontWeight.w900,
             fontSize: 20,
-            letterSpacing: -0.5,
+            letterSpacing: 0,
           ),
         ),
         const SizedBox(height: 3),
@@ -326,10 +305,7 @@ class _AssignmentStatusCard extends StatelessWidget {
   final StudentAssignmentBundle item;
   final Color accent;
 
-  const _AssignmentStatusCard({
-    required this.item,
-    required this.accent,
-  });
+  const _AssignmentStatusCard({required this.item, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -342,14 +318,14 @@ class _AssignmentStatusCard extends StatelessWidget {
     final statusText = !submitted
         ? 'Teslim edilmedi'
         : evaluated
-            ? 'Değerlendirildi'
-            : 'Teslim edildi';
+        ? 'Değerlendirildi'
+        : 'Teslim edildi';
 
     final statusColor = !submitted
         ? const Color(0xFFEF4444)
         : evaluated
-            ? const Color(0xFF10B981)
-            : const Color(0xFFF59E0B);
+        ? const Color(0xFF10B981)
+        : const Color(0xFFF59E0B);
 
     return Container(
       width: double.infinity,
@@ -357,9 +333,7 @@ class _AssignmentStatusCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
@@ -378,8 +352,8 @@ class _AssignmentStatusCard extends StatelessWidget {
                   evaluated
                       ? Icons.verified_rounded
                       : submitted
-                          ? Icons.upload_file_rounded
-                          : Icons.pending_actions_rounded,
+                      ? Icons.upload_file_rounded
+                      : Icons.pending_actions_rounded,
                   color: statusColor,
                 ),
               ),
@@ -394,7 +368,7 @@ class _AssignmentStatusCard extends StatelessWidget {
                         color: AppTheme.dark,
                         fontWeight: FontWeight.w900,
                         fontSize: 16,
-                        letterSpacing: -0.2,
+                        letterSpacing: 0,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -409,10 +383,7 @@ class _AssignmentStatusCard extends StatelessWidget {
                   ],
                 ),
               ),
-              _StatusPill(
-                text: statusText,
-                color: statusColor,
-              ),
+              _StatusPill(text: statusText, color: statusColor),
             ],
           ),
           const SizedBox(height: 12),
@@ -484,8 +455,9 @@ class _SubmissionDetail extends StatelessWidget {
           Text(
             evaluated ? 'Öğretmen Değerlendirmesi' : 'Teslim Bilgisi',
             style: TextStyle(
-              color:
-                  evaluated ? const Color(0xFF047857) : const Color(0xFF92400E),
+              color: evaluated
+                  ? const Color(0xFF047857)
+                  : const Color(0xFF92400E),
               fontWeight: FontWeight.w900,
               fontSize: 13,
             ),
@@ -513,10 +485,7 @@ class _SubmissionDetail extends StatelessWidget {
           ],
           if (link.trim().isNotEmpty) ...[
             const SizedBox(height: 7),
-            SmartLinkText(
-              link: link,
-              color: const Color(0xFF2563EB),
-            ),
+            SmartLinkText(link: link, color: const Color(0xFF2563EB)),
           ],
           if (score.trim().isNotEmpty) ...[
             const SizedBox(height: 9),
@@ -551,18 +520,12 @@ class _StatusPill extends StatelessWidget {
   final String text;
   final Color color;
 
-  const _StatusPill({
-    required this.text,
-    required this.color,
-  });
+  const _StatusPill({required this.text, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.11),
         borderRadius: BorderRadius.circular(999),
@@ -593,10 +556,7 @@ class _MiniChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 11,
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
@@ -604,11 +564,7 @@ class _MiniChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: color,
-            size: 15,
-          ),
+          Icon(icon, color: color, size: 15),
           const SizedBox(width: 6),
           Text(
             text,
@@ -646,17 +602,11 @@ class _MessageCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
         boxShadow: AppTheme.softShadow,
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.info_rounded,
-            color: accent,
-            size: 42,
-          ),
+          Icon(Icons.info_rounded, color: accent, size: 42),
           const SizedBox(height: 12),
           Text(
             title,
@@ -686,10 +636,7 @@ class _MessageCard extends StatelessWidget {
     }
 
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: card,
-      ),
+      child: Padding(padding: const EdgeInsets.all(18), child: card),
     );
   }
 }

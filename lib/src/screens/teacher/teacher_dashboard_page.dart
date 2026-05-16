@@ -8,10 +8,7 @@ import '../../services/teacher_service.dart';
 class TeacherDashboardPage extends StatelessWidget {
   final Color accent;
 
-  const TeacherDashboardPage({
-    super.key,
-    required this.accent,
-  });
+  const TeacherDashboardPage({super.key, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -31,9 +28,7 @@ class TeacherDashboardPage extends StatelessWidget {
       stream: service.watchTeacherDashboard(teacher),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
@@ -44,7 +39,8 @@ class TeacherDashboardPage extends StatelessWidget {
           );
         }
 
-        final data = snapshot.data ??
+        final data =
+            snapshot.data ??
             const TeacherDashboardBundle(
               lessons: [],
               assignments: [],
@@ -111,7 +107,9 @@ class TeacherDashboardPage extends StatelessWidget {
                   accent: accent,
                 )
               else
-                ...data.lessons.take(5).map(
+                ...data.lessons
+                    .take(5)
+                    .map(
                       (lesson) => _LessonRow(
                         title: lesson.name,
                         subtitle: '${lesson.className} • ${lesson.branch}',
@@ -125,10 +123,7 @@ class TeacherDashboardPage extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               if (recentSubmissions.isEmpty)
-                _SmallEmpty(
-                  text: 'Henüz teslim bulunmuyor.',
-                  accent: accent,
-                )
+                _SmallEmpty(text: 'Henüz teslim bulunmuyor.', accent: accent)
               else
                 ...recentSubmissions.map(
                   (item) => _SubmissionRow(
@@ -167,10 +162,7 @@ class _Hero extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            accent,
-            AppTheme.cyan,
-          ],
+          colors: [accent, AppTheme.cyan],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -209,7 +201,7 @@ class _Hero extends StatelessWidget {
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
                     fontSize: 24,
-                    letterSpacing: -0.6,
+                    letterSpacing: 0,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -251,19 +243,13 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            color: color,
-            size: 28,
-          ),
+          Icon(icon, color: color, size: 28),
           const Spacer(),
           Text(
             value,
@@ -271,7 +257,7 @@ class _StatCard extends StatelessWidget {
               color: AppTheme.dark,
               fontWeight: FontWeight.w900,
               fontSize: 28,
-              letterSpacing: -0.8,
+              letterSpacing: 0,
             ),
           ),
           Text(
@@ -292,10 +278,7 @@ class _SectionTitle extends StatelessWidget {
   final String title;
   final String subtitle;
 
-  const _SectionTitle({
-    required this.title,
-    required this.subtitle,
-  });
+  const _SectionTitle({required this.title, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -311,7 +294,7 @@ class _SectionTitle extends StatelessWidget {
                   color: AppTheme.dark,
                   fontWeight: FontWeight.w900,
                   fontSize: 20,
-                  letterSpacing: -0.5,
+                  letterSpacing: 0,
                 ),
               ),
               const SizedBox(height: 3),
@@ -351,9 +334,7 @@ class _LessonRow extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: AppTheme.softShadow,
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
       ),
       child: Row(
         children: [
@@ -364,10 +345,7 @@ class _LessonRow extends StatelessWidget {
               color: accent.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(17),
             ),
-            child: Icon(
-              Icons.menu_book_rounded,
-              color: accent,
-            ),
+            child: Icon(Icons.menu_book_rounded, color: accent),
           ),
           const SizedBox(width: 13),
           Expanded(
@@ -424,9 +402,7 @@ class _SubmissionRow extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: AppTheme.softShadow,
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
       ),
       child: Row(
         children: [
@@ -468,10 +444,7 @@ class _SubmissionRow extends StatelessWidget {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 7,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(999),
@@ -495,10 +468,7 @@ class _SmallEmpty extends StatelessWidget {
   final String text;
   final Color accent;
 
-  const _SmallEmpty({
-    required this.text,
-    required this.accent,
-  });
+  const _SmallEmpty({required this.text, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -508,9 +478,7 @@ class _SmallEmpty extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Text(
@@ -550,11 +518,7 @@ class _MessageCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.info_rounded,
-              color: accent,
-              size: 42,
-            ),
+            Icon(Icons.info_rounded, color: accent, size: 42),
             const SizedBox(height: 12),
             Text(
               title,

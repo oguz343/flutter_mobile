@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../core/app_helpers.dart';
 import '../../core/app_theme.dart';
@@ -8,10 +8,7 @@ import '../../services/admin_school_service.dart';
 class AdminAnnouncementsPage extends StatelessWidget {
   final Color accent;
 
-  const AdminAnnouncementsPage({
-    super.key,
-    required this.accent,
-  });
+  const AdminAnnouncementsPage({super.key, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -21,9 +18,7 @@ class AdminAnnouncementsPage extends StatelessWidget {
       stream: service.watchAnnouncementsData(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
@@ -34,7 +29,8 @@ class AdminAnnouncementsPage extends StatelessWidget {
           );
         }
 
-        final data = snapshot.data ??
+        final data =
+            snapshot.data ??
             const AdminSchoolData(
               classes: [],
               lessons: [],
@@ -56,9 +52,7 @@ class AdminAnnouncementsPage extends StatelessWidget {
                     isScrollControlled: true,
                     useSafeArea: true,
                     backgroundColor: Colors.transparent,
-                    builder: (_) => _AnnouncementSheet(
-                      accent: accent,
-                    ),
+                    builder: (_) => _AnnouncementSheet(accent: accent),
                   );
                 },
               ),
@@ -122,11 +116,7 @@ class _Hero extends StatelessWidget {
   final int count;
   final VoidCallback onAdd;
 
-  const _Hero({
-    required this.accent,
-    required this.count,
-    required this.onAdd,
-  });
+  const _Hero({required this.accent, required this.count, required this.onAdd});
 
   @override
   Widget build(BuildContext context) {
@@ -135,10 +125,7 @@ class _Hero extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            accent,
-            const Color(0xFF06B6D4),
-          ],
+          colors: [accent, const Color(0xFF06B6D4)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -179,7 +166,7 @@ class _Hero extends StatelessWidget {
                         color: Colors.white,
                         fontWeight: FontWeight.w900,
                         fontSize: 25,
-                        letterSpacing: -0.7,
+                        letterSpacing: 0,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -211,9 +198,7 @@ class _Hero extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
                 ),
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                ),
+                textStyle: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ),
           ),
@@ -241,9 +226,7 @@ class _AnnouncementCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
@@ -258,10 +241,7 @@ class _AnnouncementCard extends StatelessWidget {
                   color: accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(19),
                 ),
-                child: Icon(
-                  Icons.notifications_active_rounded,
-                  color: accent,
-                ),
+                child: Icon(Icons.notifications_active_rounded, color: accent),
               ),
               const SizedBox(width: 13),
               Expanded(
@@ -304,9 +284,7 @@ class _AnnouncementCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFFE2E8F0),
-              ),
+              border: Border.all(color: AppTheme.line),
             ),
             child: Text(
               item.content,
@@ -327,9 +305,7 @@ class _AnnouncementCard extends StatelessWidget {
 class _AnnouncementSheet extends StatefulWidget {
   final Color accent;
 
-  const _AnnouncementSheet({
-    required this.accent,
-  });
+  const _AnnouncementSheet({required this.accent});
 
   @override
   State<_AnnouncementSheet> createState() => _AnnouncementSheetState();
@@ -373,11 +349,9 @@ class _AnnouncementSheetState extends State<_AnnouncementSheet> {
 
       Navigator.of(context).pop();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Duyuru oluşturuldu.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Duyuru oluşturuldu.')));
     } on AdminSchoolException catch (e) {
       setState(() => _error = e.message);
     } catch (_) {
@@ -391,13 +365,7 @@ class _AnnouncementSheetState extends State<_AnnouncementSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final targets = [
-      'Tüm Okul',
-      'Öğrenci',
-      'Öğretmen',
-      'Veli',
-      'Admin',
-    ];
+    final targets = ['Tüm Okul', 'Öğrenci', 'Öğretmen', 'Veli', 'Admin'];
 
     final bottom = MediaQuery.viewInsetsOf(context).bottom;
 
@@ -408,9 +376,7 @@ class _AnnouncementSheetState extends State<_AnnouncementSheet> {
         padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(34),
-          ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(34)),
         ),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -422,7 +388,7 @@ class _AnnouncementSheetState extends State<_AnnouncementSheet> {
                 width: 46,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
+                  color: AppTheme.line,
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -436,10 +402,7 @@ class _AnnouncementSheetState extends State<_AnnouncementSheet> {
                       color: widget.accent.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(19),
                     ),
-                    child: Icon(
-                      Icons.add_alert_rounded,
-                      color: widget.accent,
-                    ),
+                    child: Icon(Icons.add_alert_rounded, color: widget.accent),
                   ),
                   const SizedBox(width: 13),
                   const Expanded(
@@ -449,7 +412,7 @@ class _AnnouncementSheetState extends State<_AnnouncementSheet> {
                         color: AppTheme.dark,
                         fontWeight: FontWeight.w900,
                         fontSize: 21,
-                        letterSpacing: -0.5,
+                        letterSpacing: 0,
                       ),
                     ),
                   ),
@@ -486,14 +449,9 @@ class _AnnouncementSheetState extends State<_AnnouncementSheet> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: _target,
+                initialValue: _target,
                 items: targets
-                    .map(
-                      (x) => DropdownMenuItem(
-                        value: x,
-                        child: Text(x),
-                      ),
-                    )
+                    .map((x) => DropdownMenuItem(value: x, child: Text(x)))
                     .toList(),
                 onChanged: (value) {
                   if (value != null) {
@@ -541,9 +499,7 @@ class _AnnouncementSheetState extends State<_AnnouncementSheet> {
                         )
                       : const Text(
                           'Duyuruyu Yayınla',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.w900),
                         ),
                 ),
               ),
@@ -577,17 +533,11 @@ class _MessageCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
         boxShadow: AppTheme.softShadow,
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.info_rounded,
-            color: accent,
-            size: 42,
-          ),
+          Icon(Icons.info_rounded, color: accent, size: 42),
           const SizedBox(height: 12),
           Text(
             title,
@@ -617,10 +567,7 @@ class _MessageCard extends StatelessWidget {
     }
 
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: card,
-      ),
+      child: Padding(padding: const EdgeInsets.all(18), child: card),
     );
   }
 }

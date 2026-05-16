@@ -21,31 +21,22 @@ class ParentShell extends StatelessWidget {
         PremiumShellItem(
           label: 'Panel',
           icon: Icons.dashboard_rounded,
-          child: ParentOverviewPage(
-            accent: accent,
-          ),
+          child: ParentOverviewPage(accent: accent),
         ),
         PremiumShellItem(
           label: 'Durum',
           icon: Icons.checklist_rounded,
-          child: ParentAssignmentsStatusPage(
-            accent: accent,
-          ),
+          child: ParentAssignmentsStatusPage(accent: accent),
         ),
         PremiumShellItem(
           label: 'Not',
           icon: Icons.grade_rounded,
-          child: ParentGradesPage(
-            accent: accent,
-          ),
+          child: ParentGradesPage(accent: accent),
         ),
         PremiumShellItem(
           label: 'Duyuru',
           icon: Icons.campaign_rounded,
-          child: AnnouncementsPage(
-            role: 'Veli',
-            accent: accent,
-          ),
+          child: AnnouncementsPage(role: 'Veli', accent: accent),
         ),
       ],
     );

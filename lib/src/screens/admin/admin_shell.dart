@@ -23,44 +23,32 @@ class AdminShell extends StatelessWidget {
         PremiumShellItem(
           label: 'Panel',
           icon: Icons.dashboard_rounded,
-          child: AdminDashboardPage(
-            accent: accent,
-          ),
+          child: AdminDashboardPage(accent: accent),
         ),
         PremiumShellItem(
           label: 'Kullanıcı',
           icon: Icons.groups_rounded,
-          child: AdminUsersPage(
-            accent: accent,
-          ),
+          child: AdminUsersPage(accent: accent),
         ),
         PremiumShellItem(
           label: 'Okul',
           icon: Icons.apartment_rounded,
-          child: AdminClassesLessonsPage(
-            accent: accent,
-          ),
+          child: AdminClassesLessonsPage(accent: accent),
         ),
         PremiumShellItem(
           label: 'Excel',
           icon: Icons.table_chart_rounded,
-          child: AdminExcelImportPage(
-            accent: accent,
-          ),
+          child: AdminExcelImportPage(accent: accent),
         ),
         PremiumShellItem(
           label: 'Duyuru',
           icon: Icons.campaign_rounded,
-          child: AdminAnnouncementsPage(
-            accent: accent,
-          ),
+          child: AdminAnnouncementsPage(accent: accent),
         ),
         PremiumShellItem(
           label: 'Talepler',
           icon: Icons.lock_reset_rounded,
-          child: AdminPasswordRequestsPage(
-            accent: accent,
-          ),
+          child: AdminPasswordRequestsPage(accent: accent),
         ),
       ],
     );

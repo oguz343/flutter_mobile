@@ -9,10 +9,7 @@ import '../../widgets/smart_link_text.dart';
 class StudentSubmissionsPage extends StatelessWidget {
   final Color accent;
 
-  const StudentSubmissionsPage({
-    super.key,
-    required this.accent,
-  });
+  const StudentSubmissionsPage({super.key, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -35,8 +32,9 @@ class StudentSubmissionsPage extends StatelessWidget {
 
         final all = snapshot.data ?? [];
         final submitted = all.where((x) => x.submission != null).toList();
-        final evaluated =
-            submitted.where((x) => x.submission?.isEvaluated ?? false).length;
+        final evaluated = submitted
+            .where((x) => x.submission?.isEvaluated ?? false)
+            .length;
         final waiting = submitted.length - evaluated;
 
         return SingleChildScrollView(
@@ -55,16 +53,14 @@ class StudentSubmissionsPage extends StatelessWidget {
                 _EmptyState(
                   accent: accent,
                   title: 'Henüz teslim yok',
-                  message: 'Ödev teslim ettiğinde burada timeline olarak görünecek.',
+                  message:
+                      'Ödev teslim ettiğinde burada timeline olarak görünecek.',
                 )
               else
                 ...submitted.map(
                   (item) => Padding(
                     padding: const EdgeInsets.only(bottom: 14),
-                    child: _SubmissionTimelineCard(
-                      item: item,
-                      accent: accent,
-                    ),
+                    child: _SubmissionTimelineCard(item: item, accent: accent),
                   ),
                 ),
             ],
@@ -126,10 +122,7 @@ class _Hero extends StatelessWidget {
                 height: 66,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      accent,
-                      AppTheme.cyan,
-                    ],
+                    colors: [accent, AppTheme.cyan],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -148,7 +141,7 @@ class _Hero extends StatelessWidget {
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
                   fontSize: 27,
-                  letterSpacing: -0.9,
+                  letterSpacing: 0,
                 ),
               ),
               const SizedBox(height: 7),
@@ -210,9 +203,7 @@ class _HeroMetric extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(23),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.10),
-          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.10)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,10 +236,7 @@ class _SubmissionTimelineCard extends StatelessWidget {
   final StudentAssignmentBundle item;
   final Color accent;
 
-  const _SubmissionTimelineCard({
-    required this.item,
-    required this.accent,
-  });
+  const _SubmissionTimelineCard({required this.item, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -262,7 +250,7 @@ class _SubmissionTimelineCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Row(
@@ -278,7 +266,9 @@ class _SubmissionTimelineCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(18),
                 ),
                 child: Icon(
-                  evaluated ? Icons.verified_rounded : Icons.hourglass_top_rounded,
+                  evaluated
+                      ? Icons.verified_rounded
+                      : Icons.hourglass_top_rounded,
                   color: color,
                 ),
               ),
@@ -304,7 +294,7 @@ class _SubmissionTimelineCard extends StatelessWidget {
                     color: AppTheme.dark,
                     fontWeight: FontWeight.w900,
                     fontSize: 16,
-                    letterSpacing: -0.3,
+                    letterSpacing: 0,
                   ),
                 ),
                 const SizedBox(height: 5),
@@ -325,10 +315,7 @@ class _SubmissionTimelineCard extends StatelessWidget {
                 ),
                 if (submission.link.trim().isNotEmpty) ...[
                   const SizedBox(height: 9),
-                  SmartLinkText(
-                    link: submission.link,
-                    color: accent,
-                  ),
+                  SmartLinkText(link: submission.link, color: accent),
                 ],
                 const SizedBox(height: 10),
                 Container(
@@ -337,7 +324,7 @@ class _SubmissionTimelineCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: const Color(0xFFF8FAFC),
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    border: Border.all(color: AppTheme.line),
                   ),
                   child: Text(
                     submission.answer.trim().isEmpty ? '-' : submission.answer,
@@ -452,10 +439,7 @@ class _StatusBanner extends StatelessWidget {
   final String text;
   final Color color;
 
-  const _StatusBanner({
-    required this.text,
-    required this.color,
-  });
+  const _StatusBanner({required this.text, required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -506,7 +490,7 @@ class _EmptyState extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(32),
         boxShadow: AppTheme.softShadow,
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppTheme.line),
       ),
       child: Column(
         children: [

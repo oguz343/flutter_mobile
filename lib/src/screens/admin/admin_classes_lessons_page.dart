@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../core/app_theme.dart';
 import '../../models/app_user.dart';
@@ -9,10 +9,7 @@ import '../../services/admin_service.dart';
 class AdminClassesLessonsPage extends StatelessWidget {
   final Color accent;
 
-  const AdminClassesLessonsPage({
-    super.key,
-    required this.accent,
-  });
+  const AdminClassesLessonsPage({super.key, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -22,9 +19,7 @@ class AdminClassesLessonsPage extends StatelessWidget {
       stream: service.watchSchoolData(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
@@ -35,7 +30,8 @@ class AdminClassesLessonsPage extends StatelessWidget {
           );
         }
 
-        final data = snapshot.data ??
+        final data =
+            snapshot.data ??
             const AdminSchoolData(
               classes: [],
               lessons: [],
@@ -58,10 +54,8 @@ class AdminClassesLessonsPage extends StatelessWidget {
                     isScrollControlled: true,
                     useSafeArea: true,
                     backgroundColor: Colors.transparent,
-                    builder: (_) => _ClassSheet(
-                      accent: accent,
-                      teachers: data.teachers,
-                    ),
+                    builder: (_) =>
+                        _ClassSheet(accent: accent, teachers: data.teachers),
                   );
                 },
                 onAddLesson: () {
@@ -257,10 +251,7 @@ class _Hero extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            accent,
-            const Color(0xFF06B6D4),
-          ],
+          colors: [accent, const Color(0xFF06B6D4)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -301,7 +292,7 @@ class _Hero extends StatelessWidget {
                         color: Colors.white,
                         fontWeight: FontWeight.w900,
                         fontSize: 24,
-                        letterSpacing: -0.7,
+                        letterSpacing: 0,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -393,9 +384,7 @@ class _HeroButton extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(18),
           ),
-          textStyle: const TextStyle(
-            fontWeight: FontWeight.w900,
-          ),
+          textStyle: const TextStyle(fontWeight: FontWeight.w900),
         ),
       ),
     );
@@ -424,9 +413,7 @@ class _ClassCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Row(
@@ -438,10 +425,7 @@ class _ClassCard extends StatelessWidget {
               color: accent.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Icon(
-              Icons.apartment_rounded,
-              color: accent,
-            ),
+            child: Icon(Icons.apartment_rounded, color: accent),
           ),
           const SizedBox(width: 13),
           Expanded(
@@ -470,17 +454,11 @@ class _ClassCard extends StatelessWidget {
           ),
           IconButton(
             onPressed: onEdit,
-            icon: Icon(
-              Icons.edit_rounded,
-              color: accent,
-            ),
+            icon: Icon(Icons.edit_rounded, color: accent),
           ),
           IconButton(
             onPressed: onDelete,
-            icon: const Icon(
-              Icons.delete_rounded,
-              color: Color(0xFFEF4444),
-            ),
+            icon: const Icon(Icons.delete_rounded, color: Color(0xFFEF4444)),
           ),
         ],
       ),
@@ -511,9 +489,7 @@ class _LessonCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Row(
@@ -557,17 +533,11 @@ class _LessonCard extends StatelessWidget {
           ),
           IconButton(
             onPressed: onEdit,
-            icon: Icon(
-              Icons.edit_rounded,
-              color: accent,
-            ),
+            icon: Icon(Icons.edit_rounded, color: accent),
           ),
           IconButton(
             onPressed: onDelete,
-            icon: const Icon(
-              Icons.delete_rounded,
-              color: Color(0xFFEF4444),
-            ),
+            icon: const Icon(Icons.delete_rounded, color: Color(0xFFEF4444)),
           ),
         ],
       ),
@@ -684,14 +654,9 @@ class _ClassSheetState extends State<_ClassSheet> {
             const SizedBox(height: 12),
           ],
           DropdownButtonFormField<String>(
-            value: value,
+            initialValue: value,
             items: classes
-                .map(
-                  (x) => DropdownMenuItem(
-                    value: x,
-                    child: Text(x),
-                  ),
-                )
+                .map((x) => DropdownMenuItem(value: x, child: Text(x)))
                 .toList(),
             onChanged: (value) {
               if (value != null) {
@@ -705,7 +670,7 @@ class _ClassSheetState extends State<_ClassSheet> {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<AppUser?>(
-            value: _teacher,
+            initialValue: _teacher,
             items: [
               const DropdownMenuItem<AppUser?>(
                 value: null,
@@ -761,6 +726,7 @@ class _LessonSheetState extends State<_LessonSheet> {
   final TextEditingController _lessonController = TextEditingController();
 
   String _className = '9-A';
+  final List<String> _selectedClassNames = [];
   AppUser? _teacher;
   bool _loading = false;
   String _error = '';
@@ -776,6 +742,9 @@ class _LessonSheetState extends State<_LessonSheet> {
     if (lesson != null) {
       _lessonController.text = lesson.name;
       _className = lesson.className;
+      _selectedClassNames
+        ..clear()
+        ..add(lesson.className);
 
       for (final teacher in widget.teachers) {
         if (teacher.number == lesson.teacherNo) {
@@ -785,6 +754,13 @@ class _LessonSheetState extends State<_LessonSheet> {
       }
     } else if (widget.classes.isNotEmpty) {
       _className = widget.classes.first.name;
+      _selectedClassNames
+        ..clear()
+        ..add(widget.classes.first.name);
+    } else {
+      _selectedClassNames
+        ..clear()
+        ..add(_className);
     }
   }
 
@@ -811,11 +787,31 @@ class _LessonSheetState extends State<_LessonSheet> {
           teacher: _teacher,
         );
       } else {
-        await _service.createLesson(
+        final result = await _service.createLesson(
           lessonName: _lessonController.text,
-          className: _className,
+          className: _selectedClassNames.isEmpty
+              ? ''
+              : _selectedClassNames.first,
+          classNames: _selectedClassNames,
           teacher: _teacher,
         );
+
+        if (!mounted) {
+          return;
+        }
+
+        Navigator.of(context).pop();
+
+        final message = result.hasSkipped
+            ? 'Bazı ders atamaları zaten mevcut olduğu için atlandı.'
+            : result.createdCount == 1
+            ? 'Ders eklendi.'
+            : '${result.createdCount} ders ataması eklendi.';
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
+        return;
       }
 
       if (!mounted) {
@@ -840,6 +836,89 @@ class _LessonSheetState extends State<_LessonSheet> {
     }
   }
 
+  Future<void> _openClassPicker(List<String> classOptions) async {
+    final result = await showModalBottomSheet<List<String>>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final selected = _selectedClassNames.toSet();
+
+        return _BottomSheetFrame(
+          child: StatefulBuilder(
+            builder: (context, setModalState) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _SheetTitle(
+                    accent: widget.accent,
+                    icon: Icons.apartment_rounded,
+                    title: 'Sınıf Seçimi',
+                  ),
+                  const SizedBox(height: 14),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 420),
+                    child: ListView.separated(
+                      shrinkWrap: true,
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: classOptions.length,
+                      separatorBuilder: (context, index) =>
+                          const Divider(height: 1),
+                      itemBuilder: (context, index) {
+                        final className = classOptions[index];
+                        final checked = selected.contains(className);
+
+                        return CheckboxListTile(
+                          value: checked,
+                          contentPadding: EdgeInsets.zero,
+                          activeColor: widget.accent,
+                          title: Text(className),
+                          onChanged: (value) {
+                            setModalState(() {
+                              if (value ?? false) {
+                                selected.add(className);
+                              } else {
+                                selected.remove(className);
+                              }
+                            });
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  _SaveButton(
+                    accent: widget.accent,
+                    loading: false,
+                    text: 'Seçimi Kaydet',
+                    onTap: () {
+                      Navigator.of(context).pop(selected.toList());
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
+
+    if (result == null || !mounted) {
+      return;
+    }
+
+    setState(() {
+      _selectedClassNames
+        ..clear()
+        ..addAll(result);
+
+      if (_selectedClassNames.isNotEmpty) {
+        _className = _selectedClassNames.first;
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final classOptions = widget.classes.isEmpty
@@ -850,8 +929,12 @@ class _LessonSheetState extends State<_LessonSheet> {
           ]
         : widget.classes.map((x) => x.name).toList();
 
-    final classValue =
-        classOptions.contains(_className) ? _className : classOptions.first;
+    final classValue = classOptions.contains(_className)
+        ? _className
+        : classOptions.first;
+    final selectedClasses = _selectedClassNames
+        .where((className) => classOptions.contains(className))
+        .toList();
 
     return _BottomSheetFrame(
       child: Column(
@@ -877,29 +960,56 @@ class _LessonSheetState extends State<_LessonSheet> {
             ),
           ),
           const SizedBox(height: 12),
-          DropdownButtonFormField<String>(
-            value: classValue,
-            items: classOptions
-                .map(
-                  (x) => DropdownMenuItem(
-                    value: x,
-                    child: Text(x),
-                  ),
-                )
-                .toList(),
-            onChanged: (value) {
-              if (value != null) {
-                setState(() => _className = value);
-              }
-            },
-            decoration: const InputDecoration(
-              labelText: 'Sınıf',
-              prefixIcon: Icon(Icons.apartment_rounded),
+          if (editing)
+            DropdownButtonFormField<String>(
+              initialValue: classValue,
+              items: classOptions
+                  .map((x) => DropdownMenuItem(value: x, child: Text(x)))
+                  .toList(),
+              onChanged: (value) {
+                if (value != null) {
+                  setState(() {
+                    _className = value;
+                    _selectedClassNames
+                      ..clear()
+                      ..add(value);
+                  });
+                }
+              },
+              decoration: const InputDecoration(
+                labelText: 'Sınıf',
+                prefixIcon: Icon(Icons.apartment_rounded),
+              ),
+            )
+          else
+            InkWell(
+              borderRadius: BorderRadius.circular(14),
+              onTap: () => _openClassPicker(classOptions),
+              child: InputDecorator(
+                decoration: const InputDecoration(
+                  labelText: 'Sınıflar',
+                  prefixIcon: Icon(Icons.apartment_rounded),
+                  suffixIcon: Icon(Icons.keyboard_arrow_down_rounded),
+                ),
+                child: selectedClasses.isEmpty
+                    ? const Text('En az bir sınıf seçin')
+                    : Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: selectedClasses
+                            .map(
+                              (className) => Chip(
+                                label: Text(className),
+                                visualDensity: VisualDensity.compact,
+                              ),
+                            )
+                            .toList(),
+                      ),
+              ),
             ),
-          ),
           const SizedBox(height: 12),
           DropdownButtonFormField<AppUser?>(
-            value: _teacher,
+            initialValue: _teacher,
             items: widget.teachers
                 .map(
                   (teacher) => DropdownMenuItem<AppUser?>(
@@ -932,9 +1042,7 @@ class _LessonSheetState extends State<_LessonSheet> {
 class _BottomSheetFrame extends StatelessWidget {
   final Widget child;
 
-  const _BottomSheetFrame({
-    required this.child,
-  });
+  const _BottomSheetFrame({required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -947,9 +1055,7 @@ class _BottomSheetFrame extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(34),
-          ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(34)),
         ),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -980,7 +1086,7 @@ class _SheetTitle extends StatelessWidget {
           width: 46,
           height: 5,
           decoration: BoxDecoration(
-            color: const Color(0xFFE2E8F0),
+            color: AppTheme.line,
             borderRadius: BorderRadius.circular(999),
           ),
         ),
@@ -994,10 +1100,7 @@ class _SheetTitle extends StatelessWidget {
                 color: accent.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(19),
               ),
-              child: Icon(
-                icon,
-                color: accent,
-              ),
+              child: Icon(icon, color: accent),
             ),
             const SizedBox(width: 13),
             Expanded(
@@ -1007,7 +1110,7 @@ class _SheetTitle extends StatelessWidget {
                   color: AppTheme.dark,
                   fontWeight: FontWeight.w900,
                   fontSize: 21,
-                  letterSpacing: -0.5,
+                  letterSpacing: 0,
                 ),
               ),
             ),
@@ -1055,12 +1158,7 @@ class _SaveButton extends StatelessWidget {
                   strokeWidth: 2.5,
                 ),
               )
-            : Text(
-                text,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
+            : Text(text, style: const TextStyle(fontWeight: FontWeight.w900)),
       ),
     );
   }
@@ -1069,9 +1167,7 @@ class _SaveButton extends StatelessWidget {
 class _ErrorBox extends StatelessWidget {
   final String text;
 
-  const _ErrorBox({
-    required this.text,
-  });
+  const _ErrorBox({required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -1098,10 +1194,7 @@ class _SectionTitle extends StatelessWidget {
   final String title;
   final String subtitle;
 
-  const _SectionTitle({
-    required this.title,
-    required this.subtitle,
-  });
+  const _SectionTitle({required this.title, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -1114,7 +1207,7 @@ class _SectionTitle extends StatelessWidget {
             color: AppTheme.dark,
             fontWeight: FontWeight.w900,
             fontSize: 20,
-            letterSpacing: -0.5,
+            letterSpacing: 0,
           ),
         ),
         const SizedBox(height: 3),
@@ -1153,17 +1246,11 @@ class _MessageCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
         boxShadow: AppTheme.softShadow,
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.info_rounded,
-            color: accent,
-            size: 42,
-          ),
+          Icon(Icons.info_rounded, color: accent, size: 42),
           const SizedBox(height: 12),
           Text(
             title,
@@ -1193,10 +1280,7 @@ class _MessageCard extends StatelessWidget {
     }
 
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: card,
-      ),
+      child: Padding(padding: const EdgeInsets.all(18), child: card),
     );
   }
 }

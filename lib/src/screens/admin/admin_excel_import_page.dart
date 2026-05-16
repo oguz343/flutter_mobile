@@ -1,6 +1,7 @@
-import 'package:excel/excel.dart' as xls;
+﻿import 'package:excel/excel.dart' as xls;
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../core/app_helpers.dart';
 import '../../core/app_theme.dart';
@@ -9,10 +10,7 @@ import '../../services/admin_user_service.dart';
 class AdminExcelImportPage extends StatefulWidget {
   final Color accent;
 
-  const AdminExcelImportPage({
-    super.key,
-    required this.accent,
-  });
+  const AdminExcelImportPage({super.key, required this.accent});
 
   @override
   State<AdminExcelImportPage> createState() => _AdminExcelImportPageState();
@@ -85,7 +83,7 @@ class _AdminExcelImportPageState extends State<AdminExcelImportPage> {
             role: 'Öğrenci',
             name: draft.name,
             number: draft.number,
-            password: draft.password.trim().isEmpty ? '123456' : draft.password,
+            password: draft.activationCode,
             tc: draft.tc,
             phone: draft.phone,
             className: draft.className,
@@ -97,9 +95,11 @@ class _AdminExcelImportPageState extends State<AdminExcelImportPage> {
           _logs.add(
             _ImportLog(
               title: draft.name,
-              subtitle: 'No: ${draft.number} • Sınıf: ${draft.className}',
+              subtitle:
+                  'No: ${draft.number} • Sınıf: ${draft.className} • Kod: ${draft.activationCode}',
               status: 'Eklendi',
               success: true,
+              activationCode: draft.activationCode,
             ),
           );
         } on AdminUserException catch (e) {
@@ -188,7 +188,7 @@ class _AdminExcelImportPageState extends State<AdminExcelImportPage> {
               'name',
               'fullname',
             ])
-          : _cellText(row.length > 0 ? row[0] : null);
+          : _cellText(row.isNotEmpty ? row[0] : null);
 
       final number = hasHeader
           ? _getByAliases(row, headerMap, [
@@ -235,23 +235,12 @@ class _AdminExcelImportPageState extends State<AdminExcelImportPage> {
             ])
           : _cellText(row.length > 4 ? row[4] : null);
 
-      final password = hasHeader
-          ? _getByAliases(row, headerMap, [
-              'sifre',
-              'şifre',
-              'parola',
-              'password',
-              'gecicisifre',
-              'geçicişifre',
-            ])
-          : _cellText(row.length > 5 ? row[5] : null);
-
       final cleanName = name.trim();
       final cleanNumber = AppHelpers.onlyDigits(number);
       final cleanClass = AppHelpers.normalizeClassName(classNameRaw);
       final cleanTc = AppHelpers.onlyDigits(tc);
       final cleanPhone = _normalizePhone(phone);
-      final cleanPassword = password.trim().isEmpty ? '123456' : password.trim();
+      final activationCode = _service.generateActivationCode();
 
       if (cleanName.isEmpty || cleanNumber.isEmpty || cleanClass.isEmpty) {
         _logs.add(
@@ -272,7 +261,7 @@ class _AdminExcelImportPageState extends State<AdminExcelImportPage> {
           className: cleanClass,
           tc: cleanTc,
           phone: cleanPhone,
-          password: cleanPassword,
+          activationCode: activationCode,
         ),
       );
     }
@@ -360,10 +349,7 @@ class _AdminExcelImportPageState extends State<AdminExcelImportPage> {
           _InfoCard(accent: widget.accent),
           const SizedBox(height: 16),
           if (_message.isNotEmpty)
-            _ResultBox(
-              message: _message,
-              success: _success,
-            ),
+            _ResultBox(message: _message, success: _success),
           if (_message.isNotEmpty) const SizedBox(height: 16),
           if (_logs.isEmpty)
             _EmptyCard(accent: widget.accent)
@@ -371,10 +357,7 @@ class _AdminExcelImportPageState extends State<AdminExcelImportPage> {
             ..._logs.map(
               (log) => Padding(
                 padding: const EdgeInsets.only(bottom: 10),
-                child: _LogCard(
-                  log: log,
-                  accent: widget.accent,
-                ),
+                child: _LogCard(log: log, accent: widget.accent),
               ),
             ),
         ],
@@ -401,10 +384,7 @@ class _Hero extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            accent,
-            const Color(0xFF06B6D4),
-          ],
+          colors: [accent, const Color(0xFF06B6D4)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -445,7 +425,7 @@ class _Hero extends StatelessWidget {
                         color: Colors.white,
                         fontWeight: FontWeight.w900,
                         fontSize: 24,
-                        letterSpacing: -0.7,
+                        letterSpacing: 0,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -486,9 +466,7 @@ class _Hero extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
                 ),
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                ),
+                textStyle: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ),
           ),
@@ -501,17 +479,15 @@ class _Hero extends StatelessWidget {
 class _InfoCard extends StatelessWidget {
   final Color accent;
 
-  const _InfoCard({
-    required this.accent,
-  });
+  const _InfoCard({required this.accent});
 
   @override
   Widget build(BuildContext context) {
     final items = [
-      'Başlıklar desteklenir: Ad Soyad, Numara, Sınıf, TC, Telefon, Şifre',
-      'Başlık yoksa sıra: Ad Soyad | Numara | Sınıf | TC | Telefon | Şifre',
+      'Başlıklar desteklenir: Ad Soyad, Numara, Sınıf, TC, Telefon',
+      'Başlık yoksa sıra: Ad Soyad | Numara | Sınıf | TC | Telefon',
       'Sınıf biçimleri otomatik düzelir: 11B, 11-B, 11/B, 11 b',
-      'Şifre boşsa otomatik 123456 verilir ve ilk girişte değiştirilir.',
+      'Her öğrenci için otomatik 6 haneli aktivasyon kodu üretilir.',
     ];
 
     return Container(
@@ -520,9 +496,7 @@ class _InfoCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
@@ -534,7 +508,7 @@ class _InfoCard extends StatelessWidget {
               color: AppTheme.dark,
               fontWeight: FontWeight.w900,
               fontSize: 19,
-              letterSpacing: -0.4,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 12),
@@ -544,11 +518,7 @@ class _InfoCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(
-                    Icons.check_circle_rounded,
-                    color: accent,
-                    size: 19,
-                  ),
+                  Icon(Icons.check_circle_rounded, color: accent, size: 19),
                   const SizedBox(width: 9),
                   Expanded(
                     child: Text(
@@ -575,10 +545,7 @@ class _ResultBox extends StatelessWidget {
   final String message;
   final bool success;
 
-  const _ResultBox({
-    required this.message,
-    required this.success,
-  });
+  const _ResultBox({required this.message, required this.success});
 
   @override
   Widget build(BuildContext context) {
@@ -590,9 +557,7 @@ class _ResultBox extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: color.withValues(alpha: 0.22),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.22)),
       ),
       child: Row(
         children: [
@@ -620,9 +585,7 @@ class _ResultBox extends StatelessWidget {
 class _EmptyCard extends StatelessWidget {
   final Color accent;
 
-  const _EmptyCard({
-    required this.accent,
-  });
+  const _EmptyCard({required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -632,18 +595,12 @@ class _EmptyCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.table_rows_rounded,
-            color: accent,
-            size: 42,
-          ),
+          Icon(Icons.table_rows_rounded, color: accent, size: 42),
           const SizedBox(height: 12),
           const Text(
             'Henüz aktarım yapılmadı',
@@ -672,23 +629,20 @@ class _LogCard extends StatelessWidget {
   final _ImportLog log;
   final Color accent;
 
-  const _LogCard({
-    required this.log,
-    required this.accent,
-  });
+  const _LogCard({required this.log, required this.accent});
 
   @override
   Widget build(BuildContext context) {
-    final color = log.success ? const Color(0xFF10B981) : const Color(0xFFEF4444);
+    final color = log.success
+        ? const Color(0xFF10B981)
+        : const Color(0xFFEF4444);
 
     return Container(
       padding: const EdgeInsets.all(15),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Row(
@@ -731,10 +685,7 @@ class _LogCard extends StatelessWidget {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 10,
-              vertical: 7,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(999),
@@ -748,6 +699,27 @@ class _LogCard extends StatelessWidget {
               ),
             ),
           ),
+          if (log.activationCode.trim().isNotEmpty) ...[
+            const SizedBox(width: 8),
+            IconButton(
+              tooltip: 'Kodu kopyala',
+              onPressed: () async {
+                await Clipboard.setData(
+                  ClipboardData(text: log.activationCode),
+                );
+
+                if (!context.mounted) {
+                  return;
+                }
+
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Aktivasyon kodu kopyalandı.')),
+                );
+              },
+              icon: const Icon(Icons.copy_rounded),
+              color: accent,
+            ),
+          ],
         ],
       ),
     );
@@ -760,7 +732,7 @@ class _StudentDraft {
   final String className;
   final String tc;
   final String phone;
-  final String password;
+  final String activationCode;
 
   const _StudentDraft({
     required this.name,
@@ -768,7 +740,7 @@ class _StudentDraft {
     required this.className,
     required this.tc,
     required this.phone,
-    required this.password,
+    required this.activationCode,
   });
 }
 
@@ -777,11 +749,13 @@ class _ImportLog {
   final String subtitle;
   final String status;
   final bool success;
+  final String activationCode;
 
   const _ImportLog({
     required this.title,
     required this.subtitle,
     required this.status,
     required this.success,
+    this.activationCode = '',
   });
 }

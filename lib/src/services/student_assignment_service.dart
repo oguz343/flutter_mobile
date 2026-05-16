@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
 
 import '../core/app_helpers.dart';
 import '../models/app_user.dart';
@@ -23,48 +24,80 @@ class StudentAssignmentService {
   Stream<List<StudentAssignmentBundle>> watchAssignmentsForStudent(
     AppUser student,
   ) {
-    return _db.collection('homeworks').snapshots().asyncMap((_) async {
-      final assignments = await _loadAssignments(student);
-      final submissions = await _loadSubmissions(student);
+    final controller = StreamController<List<StudentAssignmentBundle>>();
+    final subscriptions = <StreamSubscription>[];
 
-      final result = <StudentAssignmentBundle>[];
+    Future<void> emit() async {
+      try {
+        final assignments = await _loadAssignments(student);
+        final submissions = await _loadSubmissions(student);
 
-      for (final assignment in assignments) {
-        final submission = _findSubmissionForAssignment(
-          assignment: assignment,
-          submissions: submissions,
-          student: student,
-        );
+        final result = <StudentAssignmentBundle>[];
 
-        result.add(
-          StudentAssignmentBundle(
+        for (final assignment in assignments) {
+          final submission = _findSubmissionForAssignment(
             assignment: assignment,
-            submission: submission,
-          ),
-        );
+            submissions: submissions,
+            student: student,
+          );
+
+          result.add(
+            StudentAssignmentBundle(
+              assignment: assignment,
+              submission: submission,
+            ),
+          );
+        }
+
+        result.sort((a, b) {
+          final ad =
+              a.assignment.dueDate ??
+              a.assignment.createdAt ??
+              DateTime.fromMillisecondsSinceEpoch(0);
+
+          final bd =
+              b.assignment.dueDate ??
+              b.assignment.createdAt ??
+              DateTime.fromMillisecondsSinceEpoch(0);
+
+          return bd.compareTo(ad);
+        });
+
+        if (!controller.isClosed) {
+          controller.add(result);
+        }
+      } catch (e) {
+        if (!controller.isClosed) {
+          controller.addError(e);
+        }
       }
+    }
 
-      result.sort((a, b) {
-        final ad = a.assignment.dueDate ??
-            a.assignment.createdAt ??
-            DateTime.fromMillisecondsSinceEpoch(0);
+    void listenTo(String collection) {
+      subscriptions.add(
+        _db.collection(collection).snapshots().listen((_) {
+          emit();
+        }),
+      );
+    }
 
-        final bd = b.assignment.dueDate ??
-            b.assignment.createdAt ??
-            DateTime.fromMillisecondsSinceEpoch(0);
+    listenTo('homeworks');
+    listenTo('assignments');
+    listenTo('homework_submissions');
+    listenTo('submissions');
+    emit();
 
-        return bd.compareTo(ad);
-      });
+    controller.onCancel = () async {
+      for (final sub in subscriptions) {
+        await sub.cancel();
+      }
+    };
 
-      return result;
-    });
+    return controller.stream;
   }
 
   Future<List<AssignmentModel>> _loadAssignments(AppUser student) async {
-    final collections = [
-      'homeworks',
-      'assignments',
-    ];
+    final collections = ['homeworks', 'assignments'];
 
     final result = <AssignmentModel>[];
     final seen = <String>{};
@@ -78,7 +111,7 @@ class StudentAssignmentService {
         for (final doc in snapshot.docs) {
           final data = doc.data();
 
-          if (AppHelpers.isDeleted(data)) {
+          if (AppHelpers.isDeletedOrInactive(data)) {
             continue;
           }
 
@@ -116,10 +149,7 @@ class StudentAssignmentService {
   }
 
   Future<List<SubmissionModel>> _loadSubmissions(AppUser student) async {
-    final collections = [
-      'homework_submissions',
-      'submissions',
-    ];
+    final collections = ['homework_submissions', 'submissions'];
 
     final result = <SubmissionModel>[];
     final seen = <String>{};
@@ -133,7 +163,7 @@ class StudentAssignmentService {
         for (final doc in snapshot.docs) {
           final data = doc.data();
 
-          if (AppHelpers.isDeleted(data)) {
+          if (AppHelpers.isDeletedOrInactive(data)) {
             continue;
           }
 
@@ -181,7 +211,8 @@ class StudentAssignmentService {
         '${assignment.title}_${assignment.lessonName}_${assignment.className}',
       );
 
-      final sameStudent = AppHelpers.onlyDigits(submission.studentNo) ==
+      final sameStudent =
+          AppHelpers.onlyDigits(submission.studentNo) ==
           AppHelpers.onlyDigits(student.number);
 
       if (sameStudent && submissionKey == assignmentKey) {

@@ -8,10 +8,7 @@ import '../../services/admin_user_service.dart';
 class AdminPasswordRequestsPage extends StatelessWidget {
   final Color accent;
 
-  const AdminPasswordRequestsPage({
-    super.key,
-    required this.accent,
-  });
+  const AdminPasswordRequestsPage({super.key, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -21,9 +18,7 @@ class AdminPasswordRequestsPage extends StatelessWidget {
       stream: adminService.watchDashboard(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
@@ -34,7 +29,8 @@ class AdminPasswordRequestsPage extends StatelessWidget {
           );
         }
 
-        final data = snapshot.data ??
+        final data =
+            snapshot.data ??
             const AdminDashboardBundle(
               users: [],
               students: [],
@@ -55,10 +51,7 @@ class AdminPasswordRequestsPage extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
           child: Column(
             children: [
-              _Hero(
-                accent: accent,
-                count: data.pendingPasswordRequestCount,
-              ),
+              _Hero(accent: accent, count: data.pendingPasswordRequestCount),
               const SizedBox(height: 16),
               if (requests.isEmpty)
                 _MessageCard(
@@ -71,10 +64,7 @@ class AdminPasswordRequestsPage extends StatelessWidget {
                 ...requests.map(
                   (request) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: _RequestCard(
-                      request: request,
-                      accent: accent,
-                    ),
+                    child: _RequestCard(request: request, accent: accent),
                   ),
                 ),
             ],
@@ -89,10 +79,7 @@ class _Hero extends StatelessWidget {
   final Color accent;
   final int count;
 
-  const _Hero({
-    required this.accent,
-    required this.count,
-  });
+  const _Hero({required this.accent, required this.count});
 
   @override
   Widget build(BuildContext context) {
@@ -105,10 +92,7 @@ class _Hero extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            accent,
-            const Color(0xFF06B6D4),
-          ],
+          colors: [accent, const Color(0xFF06B6D4)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -147,7 +131,7 @@ class _Hero extends StatelessWidget {
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
                     fontSize: 25,
-                    letterSpacing: -0.7,
+                    letterSpacing: 0,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -172,10 +156,7 @@ class _RequestCard extends StatefulWidget {
   final PasswordRequestModel request;
   final Color accent;
 
-  const _RequestCard({
-    required this.request,
-    required this.accent,
-  });
+  const _RequestCard({required this.request, required this.accent});
 
   @override
   State<_RequestCard> createState() => _RequestCardState();
@@ -220,9 +201,7 @@ class _RequestCardState extends State<_RequestCard> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            e.toString().replaceAll('Exception:', '').trim(),
-          ),
+          content: Text(e.toString().replaceAll('Exception:', '').trim()),
         ),
       );
     } finally {
@@ -242,20 +221,16 @@ class _RequestCardState extends State<_RequestCard> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Talep reddedildi.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Talep reddedildi.')));
     } catch (_) {
       if (!mounted) {
         return;
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Talep reddedilirken hata oluştu.'),
-        ),
+        const SnackBar(content: Text('Talep reddedilirken hata oluştu.')),
       );
     } finally {
       if (mounted) {
@@ -275,9 +250,7 @@ class _RequestCardState extends State<_RequestCard> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
@@ -292,10 +265,7 @@ class _RequestCardState extends State<_RequestCard> {
                   color: color.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(19),
                 ),
-                child: Icon(
-                  Icons.lock_reset_rounded,
-                  color: color,
-                ),
+                child: Icon(Icons.lock_reset_rounded, color: color),
               ),
               const SizedBox(width: 13),
               Expanded(
@@ -322,10 +292,7 @@ class _RequestCardState extends State<_RequestCard> {
                   ],
                 ),
               ),
-              _Pill(
-                text: request.status,
-                color: color,
-              ),
+              _Pill(text: request.status, color: color),
             ],
           ),
           const SizedBox(height: 12),
@@ -359,15 +326,11 @@ class _RequestCardState extends State<_RequestCard> {
                       label: const Text('Reddet'),
                       style: OutlinedButton.styleFrom(
                         foregroundColor: const Color(0xFFEF4444),
-                        side: const BorderSide(
-                          color: Color(0xFFFCA5A5),
-                        ),
+                        side: const BorderSide(color: Color(0xFFFCA5A5)),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(17),
                         ),
-                        textStyle: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                        ),
+                        textStyle: const TextStyle(fontWeight: FontWeight.w900),
                       ),
                     ),
                   ),
@@ -387,9 +350,7 @@ class _RequestCardState extends State<_RequestCard> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(17),
                         ),
-                        textStyle: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                        ),
+                        textStyle: const TextStyle(fontWeight: FontWeight.w900),
                       ),
                     ),
                   ),
@@ -407,18 +368,12 @@ class _Pill extends StatelessWidget {
   final String text;
   final Color color;
 
-  const _Pill({
-    required this.text,
-    required this.color,
-  });
+  const _Pill({required this.text, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.11),
         borderRadius: BorderRadius.circular(999),
@@ -449,10 +404,7 @@ class _MiniChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 11,
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
@@ -460,11 +412,7 @@ class _MiniChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: color,
-            size: 15,
-          ),
+          Icon(icon, color: color, size: 15),
           const SizedBox(width: 6),
           Text(
             text,
@@ -502,17 +450,11 @@ class _MessageCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
         boxShadow: AppTheme.softShadow,
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.info_rounded,
-            color: accent,
-            size: 42,
-          ),
+          Icon(Icons.info_rounded, color: accent, size: 42),
           const SizedBox(height: 12),
           Text(
             title,
@@ -542,10 +484,7 @@ class _MessageCard extends StatelessWidget {
     }
 
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: card,
-      ),
+      child: Padding(padding: const EdgeInsets.all(18), child: card),
     );
   }
 }

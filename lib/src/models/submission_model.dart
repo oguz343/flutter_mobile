@@ -38,161 +38,125 @@ class SubmissionModel {
   factory SubmissionModel.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? <String, dynamic>{};
 
-    final assignmentId = AppHelpers.getText(
-      data,
-      [
-        'homeworkId',
-        'HomeworkId',
-        'assignmentId',
-        'AssignmentId',
-      ],
-    );
+    return SubmissionModel.fromData(doc.id, data);
+  }
+
+  factory SubmissionModel.fromData(String id, Map<String, dynamic> data) {
+    final assignmentId = AppHelpers.getText(data, [
+      'homeworkId',
+      'HomeworkId',
+      'assignmentId',
+      'AssignmentId',
+    ]);
 
     final studentNo = AppHelpers.onlyDigits(
-      AppHelpers.getText(
-        data,
-        [
-          'studentNo',
-          'StudentNo',
-          'studentNumber',
-          'StudentNumber',
-          'schoolNo',
-          'SchoolNo',
-          'number',
-          'Number',
-        ],
-      ),
+      AppHelpers.getText(data, [
+        'studentNo',
+        'StudentNo',
+        'studentNumber',
+        'StudentNumber',
+        'schoolNo',
+        'SchoolNo',
+        'number',
+        'Number',
+      ]),
     );
 
-    final title = AppHelpers.getText(
-      data,
-      [
-        'assignmentTitle',
-        'AssignmentTitle',
-        'homeworkTitle',
-        'HomeworkTitle',
-        'title',
-        'Title',
-        'name',
-        'Name',
-      ],
-      defaultValue: 'Ödev',
-    );
+    final title = AppHelpers.getText(data, [
+      'assignmentTitle',
+      'AssignmentTitle',
+      'homeworkTitle',
+      'HomeworkTitle',
+      'title',
+      'Title',
+      'name',
+      'Name',
+    ], defaultValue: 'Ödev');
 
-    final lessonName = AppHelpers.getText(
-      data,
-      [
-        'lessonName',
-        'LessonName',
-        'lesson',
-        'Lesson',
-        'courseName',
-        'CourseName',
-        'course',
-        'Course',
-      ],
-      defaultValue: '-',
-    );
+    final lessonName = AppHelpers.getText(data, [
+      'lessonName',
+      'LessonName',
+      'lesson',
+      'Lesson',
+      'courseName',
+      'CourseName',
+      'course',
+      'Course',
+    ], defaultValue: '-');
 
     final className = AppHelpers.normalizeClassName(
-      AppHelpers.getText(
-        data,
-        [
-          'className',
-          'ClassName',
-          'class',
-          'Class',
-          'targetClass',
-          'TargetClass',
-        ],
-      ),
+      AppHelpers.getText(data, [
+        'className',
+        'ClassName',
+        'class',
+        'Class',
+        'targetClass',
+        'TargetClass',
+      ]),
     );
 
-    final answer = AppHelpers.getText(
-      data,
-      [
-        'answerText',
-        'AnswerText',
-        'answer',
-        'Answer',
-        'content',
-        'Content',
-        'text',
-        'Text',
-      ],
-      defaultValue: '-',
-    );
+    final answer = AppHelpers.getText(data, [
+      'answerText',
+      'AnswerText',
+      'answer',
+      'Answer',
+      'content',
+      'Content',
+      'text',
+      'Text',
+    ], defaultValue: '-');
 
-    final link = AppHelpers.getText(
-      data,
-      [
-        'answerLink',
-        'AnswerLink',
-        'fileUrl',
-        'FileUrl',
-        'submissionFileUrl',
-        'SubmissionFileUrl',
-        'link',
-        'Link',
-        'url',
-        'Url',
-      ],
-    );
+    final link = AppHelpers.getText(data, [
+      'answerLink',
+      'AnswerLink',
+      'fileUrl',
+      'FileUrl',
+      'submissionFileUrl',
+      'SubmissionFileUrl',
+      'link',
+      'Link',
+      'url',
+      'Url',
+    ]);
 
-    final score = AppHelpers.getText(
-      data,
-      [
-        'score',
-        'Score',
-        'grade',
-        'Grade',
-        'point',
-        'Point',
-        'not',
-        'Not',
-      ],
-    );
+    final score = AppHelpers.getText(data, [
+      'score',
+      'Score',
+      'grade',
+      'Grade',
+      'point',
+      'Point',
+      'not',
+      'Not',
+    ]);
 
-    final feedback = AppHelpers.getText(
-      data,
-      [
-        'feedback',
-        'Feedback',
-        'comment',
-        'Comment',
-        'geriDonus',
-        'GeriDonus',
-      ],
-    );
+    final feedback = AppHelpers.getText(data, [
+      'feedback',
+      'Feedback',
+      'comment',
+      'Comment',
+      'geriDonus',
+      'GeriDonus',
+    ]);
 
-    final rawStatus = AppHelpers.getText(
-      data,
-      [
-        'status',
-        'Status',
-      ],
-    );
+    final rawStatus = AppHelpers.getText(data, ['status', 'Status']);
 
     final status = rawStatus.trim().isNotEmpty
         ? rawStatus
         : score.trim().isNotEmpty || feedback.trim().isNotEmpty
-            ? 'Değerlendirildi'
-            : 'Bekliyor';
+        ? 'Değerlendirildi'
+        : 'Bekliyor';
 
     return SubmissionModel(
-      id: doc.id,
+      id: id,
       assignmentId: assignmentId,
       studentNo: studentNo,
-      studentName: AppHelpers.getText(
-        data,
-        [
-          'studentName',
-          'StudentName',
-          'name',
-          'Name',
-        ],
-        defaultValue: '-',
-      ),
+      studentName: AppHelpers.getText(data, [
+        'studentName',
+        'StudentName',
+        'name',
+        'Name',
+      ], defaultValue: '-'),
       title: title.trim().isEmpty ? 'Ödev' : title.trim(),
       lessonName: lessonName.trim().isEmpty ? '-' : lessonName.trim(),
       className: className.trim().isEmpty ? '-' : className.trim(),
@@ -201,24 +165,18 @@ class SubmissionModel {
       score: score.trim(),
       feedback: feedback.trim(),
       status: status.trim().isEmpty ? 'Bekliyor' : status.trim(),
-      submittedAt: AppHelpers.getDate(
-        data,
-        [
-          'submittedAt',
-          'SubmittedAt',
-          'createdAt',
-          'CreatedAt',
-        ],
-      ),
-      evaluatedAt: AppHelpers.getDate(
-        data,
-        [
-          'evaluatedAt',
-          'EvaluatedAt',
-          'updatedAt',
-          'UpdatedAt',
-        ],
-      ),
+      submittedAt: AppHelpers.getDate(data, [
+        'submittedAt',
+        'SubmittedAt',
+        'createdAt',
+        'CreatedAt',
+      ]),
+      evaluatedAt: AppHelpers.getDate(data, [
+        'evaluatedAt',
+        'EvaluatedAt',
+        'updatedAt',
+        'UpdatedAt',
+      ]),
     );
   }
 

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 
 import '../../core/app_helpers.dart';
 import '../../core/app_session.dart';
@@ -9,10 +9,7 @@ import '../../services/teacher_service.dart';
 class TeacherAssignmentsPage extends StatelessWidget {
   final Color accent;
 
-  const TeacherAssignmentsPage({
-    super.key,
-    required this.accent,
-  });
+  const TeacherAssignmentsPage({super.key, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +29,7 @@ class TeacherAssignmentsPage extends StatelessWidget {
       stream: service.watchTeacherDashboard(teacher),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
@@ -45,7 +40,8 @@ class TeacherAssignmentsPage extends StatelessWidget {
           );
         }
 
-        final data = snapshot.data ??
+        final data =
+            snapshot.data ??
             const TeacherDashboardBundle(
               lessons: [],
               assignments: [],
@@ -60,6 +56,7 @@ class TeacherAssignmentsPage extends StatelessWidget {
               _Hero(
                 count: data.assignments.length,
                 accent: accent,
+                canCreate: data.lessons.isNotEmpty,
                 onCreate: () {
                   showModalBottomSheet(
                     context: context,
@@ -76,16 +73,17 @@ class TeacherAssignmentsPage extends StatelessWidget {
               const SizedBox(height: 16),
               if (data.lessons.isEmpty)
                 _MessageCard(
-                  title: 'Ders bulunamadı',
+                  title: 'Size atanmış ders bulunmuyor.',
                   message:
-                      'Ödev oluşturmak için önce admin tarafından öğretmene ders atanmalı.',
+                      'Ödev oluşturmak için önce admin tarafından size ders atanmalı.',
                   accent: accent,
                   embedded: true,
                 )
               else if (data.assignments.isEmpty)
                 _MessageCard(
-                  title: 'Henüz ödev yok',
-                  message: 'Yeni ödev oluştur butonuyla ilk ödevi ekleyebilirsiniz.',
+                  title: 'Henüz ödev oluşturmadınız.',
+                  message:
+                      'Yeni ödev oluştur butonuyla ilk ödevi ekleyebilirsiniz.',
                   accent: accent,
                   embedded: true,
                 )
@@ -114,11 +112,13 @@ class TeacherAssignmentsPage extends StatelessWidget {
 class _Hero extends StatelessWidget {
   final int count;
   final Color accent;
+  final bool canCreate;
   final VoidCallback onCreate;
 
   const _Hero({
     required this.count,
     required this.accent,
+    required this.canCreate,
     required this.onCreate,
   });
 
@@ -129,19 +129,16 @@ class _Hero extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            accent,
-            AppTheme.cyan,
-          ],
+          colors: [accent, AppTheme.cyan, AppTheme.green],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: accent.withValues(alpha: 0.24),
-            blurRadius: 30,
-            offset: const Offset(0, 16),
+            color: accent.withValues(alpha: 0.22),
+            blurRadius: 34,
+            offset: const Offset(0, 18),
           ),
         ],
       ),
@@ -154,8 +151,11 @@ class _Hero extends StatelessWidget {
                 width: 62,
                 height: 62,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(23),
+                  color: Colors.white.withValues(alpha: 0.20),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.24),
+                  ),
                 ),
                 child: const Icon(
                   Icons.assignment_rounded,
@@ -174,7 +174,7 @@ class _Hero extends StatelessWidget {
                         color: Colors.white,
                         fontWeight: FontWeight.w900,
                         fontSize: 25,
-                        letterSpacing: -0.7,
+                        letterSpacing: 0,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -196,19 +196,21 @@ class _Hero extends StatelessWidget {
             width: double.infinity,
             height: 52,
             child: ElevatedButton.icon(
-              onPressed: onCreate,
+              onPressed: canCreate ? onCreate : null,
               icon: const Icon(Icons.add_rounded),
-              label: const Text('Yeni Ödev Oluştur'),
+              label: Text(
+                canCreate ? 'Yeni Ödev Oluştur' : 'Ders Ataması Bekleniyor',
+              ),
               style: ElevatedButton.styleFrom(
                 elevation: 0,
                 backgroundColor: Colors.white,
                 foregroundColor: accent,
+                disabledBackgroundColor: Colors.white.withValues(alpha: 0.38),
+                disabledForegroundColor: Colors.white.withValues(alpha: 0.84),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                ),
+                textStyle: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ),
           ),
@@ -242,10 +244,8 @@ class _AssignmentCard extends StatelessWidget {
       padding: const EdgeInsets.all(17),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
@@ -257,7 +257,7 @@ class _AssignmentCard extends StatelessWidget {
               color: AppTheme.dark,
               fontWeight: FontWeight.w900,
               fontSize: 17,
-              letterSpacing: -0.3,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 7),
@@ -302,10 +302,7 @@ class _CreateAssignmentSheet extends StatefulWidget {
   final Color accent;
   final List<LessonModel> lessons;
 
-  const _CreateAssignmentSheet({
-    required this.accent,
-    required this.lessons,
-  });
+  const _CreateAssignmentSheet({required this.accent, required this.lessons});
 
   @override
   State<_CreateAssignmentSheet> createState() => _CreateAssignmentSheetState();
@@ -315,7 +312,7 @@ class _CreateAssignmentSheetState extends State<_CreateAssignmentSheet> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
 
-  LessonModel? _selectedLesson;
+  final Set<String> _selectedLessonIds = <String>{};
   DateTime? _dueDate;
   String _fileType = 'Metin / Link';
   bool _loading = false;
@@ -326,7 +323,7 @@ class _CreateAssignmentSheetState extends State<_CreateAssignmentSheet> {
     super.initState();
 
     if (widget.lessons.isNotEmpty) {
-      _selectedLesson = widget.lessons.first;
+      _selectedLessonIds.add(widget.lessons.first.id);
     }
   }
 
@@ -364,7 +361,13 @@ class _CreateAssignmentSheetState extends State<_CreateAssignmentSheet> {
     }
 
     setState(() {
-      _dueDate = DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      _dueDate = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        time.hour,
+        time.minute,
+      );
     });
   }
 
@@ -378,8 +381,8 @@ class _CreateAssignmentSheetState extends State<_CreateAssignmentSheet> {
       return;
     }
 
-    if (_selectedLesson == null) {
-      setState(() => _error = 'Ders seçmelisiniz.');
+    if (_selectedLessonIds.isEmpty) {
+      setState(() => _error = 'En az bir ders ataması seçmelisiniz.');
       return;
     }
 
@@ -394,9 +397,9 @@ class _CreateAssignmentSheetState extends State<_CreateAssignmentSheet> {
     });
 
     try {
-      await TeacherService().createAssignment(
+      await TeacherService().createHomeworkForLessonAssignments(
         teacher: teacher,
-        lesson: _selectedLesson!,
+        selectedLessonIds: _selectedLessonIds.toList(),
         title: _titleController.text,
         description: _descriptionController.text,
         dueDate: _dueDate,
@@ -409,11 +412,9 @@ class _CreateAssignmentSheetState extends State<_CreateAssignmentSheet> {
 
       Navigator.of(context).pop();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Ödev oluşturuldu.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Ödev oluşturuldu.')));
     } catch (e) {
       setState(() => _error = e.toString().replaceAll('Exception:', '').trim());
     } finally {
@@ -434,9 +435,7 @@ class _CreateAssignmentSheetState extends State<_CreateAssignmentSheet> {
         padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(34),
-          ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -448,7 +447,7 @@ class _CreateAssignmentSheetState extends State<_CreateAssignmentSheet> {
                 width: 46,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
+                  color: AppTheme.line,
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -462,10 +461,7 @@ class _CreateAssignmentSheetState extends State<_CreateAssignmentSheet> {
                       color: widget.accent.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(19),
                     ),
-                    child: Icon(
-                      Icons.add_task_rounded,
-                      color: widget.accent,
-                    ),
+                    child: Icon(Icons.add_task_rounded, color: widget.accent),
                   ),
                   const SizedBox(width: 13),
                   const Expanded(
@@ -475,7 +471,7 @@ class _CreateAssignmentSheetState extends State<_CreateAssignmentSheet> {
                         color: AppTheme.dark,
                         fontWeight: FontWeight.w900,
                         fontSize: 21,
-                        letterSpacing: -0.5,
+                        letterSpacing: 0,
                       ),
                     ),
                   ),
@@ -489,6 +485,7 @@ class _CreateAssignmentSheetState extends State<_CreateAssignmentSheet> {
                   decoration: BoxDecoration(
                     color: const Color(0xFFFEE2E2),
                     borderRadius: BorderRadius.circular(17),
+                    border: Border.all(color: Color(0xFFFECACA)),
                   ),
                   child: Text(
                     _error,
@@ -501,23 +498,19 @@ class _CreateAssignmentSheetState extends State<_CreateAssignmentSheet> {
                 ),
                 const SizedBox(height: 12),
               ],
-              DropdownButtonFormField<LessonModel>(
-                value: _selectedLesson,
-                items: widget.lessons
-                    .map(
-                      (lesson) => DropdownMenuItem(
-                        value: lesson,
-                        child: Text('${lesson.name} • ${lesson.className}'),
-                      ),
-                    )
-                    .toList(),
-                onChanged: (value) {
-                  setState(() => _selectedLesson = value);
+              _LessonMultiSelect(
+                lessons: widget.lessons,
+                selectedLessonIds: _selectedLessonIds,
+                accent: widget.accent,
+                onChanged: (lessonId, selected) {
+                  setState(() {
+                    if (selected) {
+                      _selectedLessonIds.add(lessonId);
+                    } else {
+                      _selectedLessonIds.remove(lessonId);
+                    }
+                  });
                 },
-                decoration: const InputDecoration(
-                  labelText: 'Ders / Sınıf',
-                  prefixIcon: Icon(Icons.menu_book_rounded),
-                ),
               ),
               const SizedBox(height: 12),
               TextField(
@@ -542,7 +535,7 @@ class _CreateAssignmentSheetState extends State<_CreateAssignmentSheet> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: _fileType,
+                initialValue: _fileType,
                 items: const [
                   DropdownMenuItem(
                     value: 'Metin / Link',
@@ -610,15 +603,133 @@ class _CreateAssignmentSheetState extends State<_CreateAssignmentSheet> {
                         )
                       : const Text(
                           'Ödevi Oluştur',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.w900),
                         ),
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _LessonMultiSelect extends StatelessWidget {
+  final List<LessonModel> lessons;
+  final Set<String> selectedLessonIds;
+  final Color accent;
+  final void Function(String lessonId, bool selected) onChanged;
+
+  const _LessonMultiSelect({
+    required this.lessons,
+    required this.selectedLessonIds,
+    required this.accent,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InputDecorator(
+      decoration: const InputDecoration(
+        labelText: 'Ders/Sınıf Seç',
+        prefixIcon: Icon(Icons.menu_book_rounded),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Bu ödev seçilen her sınıf için ayrı oluşturulacak.',
+            style: TextStyle(
+              color: AppTheme.muted,
+              fontWeight: FontWeight.w800,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 10),
+          if (lessons.isEmpty)
+            const Text(
+              'Size atanmış ders bulunmuyor.',
+              style: TextStyle(
+                color: AppTheme.muted,
+                fontWeight: FontWeight.w800,
+              ),
+            )
+          else
+            ...lessons.map((lesson) {
+              final selected = selectedLessonIds.contains(lesson.id);
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(18),
+                  onTap: () => onChanged(lesson.id, !selected),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? accent.withValues(alpha: 0.10)
+                          : const Color(0xFFF8FAFC),
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(
+                        color: selected ? accent : AppTheme.line,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Checkbox(
+                          value: selected,
+                          activeColor: accent,
+                          onChanged: (value) {
+                            onChanged(lesson.id, value ?? false);
+                          },
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                lesson.displayLessonName,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppTheme.dark,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 13,
+                                ),
+                              ),
+                              const SizedBox(height: 3),
+                              Text(
+                                'Sınıf: ${lesson.displayClassName} • Branş: ${lesson.displayBranch}',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppTheme.muted,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 11.5,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            }),
+          const SizedBox(height: 2),
+          Text(
+            'Seçilen ders atamaları: ${selectedLessonIds.length}',
+            style: TextStyle(
+              color: accent,
+              fontWeight: FontWeight.w900,
+              fontSize: 12,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -638,10 +749,7 @@ class _MiniChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 11,
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
@@ -649,11 +757,7 @@ class _MiniChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: color,
-            size: 15,
-          ),
+          Icon(icon, color: color, size: 15),
           const SizedBox(width: 6),
           Text(
             text,
@@ -689,19 +793,13 @@ class _MessageCard extends StatelessWidget {
       padding: const EdgeInsets.all(28),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(22),
         boxShadow: AppTheme.softShadow,
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.info_rounded,
-            color: accent,
-            size: 42,
-          ),
+          Icon(Icons.info_rounded, color: accent, size: 42),
           const SizedBox(height: 12),
           Text(
             title,
@@ -729,10 +827,7 @@ class _MessageCard extends StatelessWidget {
     }
 
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: card,
-      ),
+      child: Padding(padding: const EdgeInsets.all(18), child: card),
     );
   }
 }

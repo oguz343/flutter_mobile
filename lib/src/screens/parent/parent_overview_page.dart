@@ -7,10 +7,7 @@ import '../../services/parent_service.dart';
 class ParentOverviewPage extends StatelessWidget {
   final Color accent;
 
-  const ParentOverviewPage({
-    super.key,
-    required this.accent,
-  });
+  const ParentOverviewPage({super.key, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -31,11 +28,9 @@ class ParentOverviewPage extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final data = snapshot.data ??
-            const ParentStudentBundle(
-              student: null,
-              assignments: [],
-            );
+        final data =
+            snapshot.data ??
+            const ParentStudentBundle(student: null, assignments: []);
 
         final student = data.student;
 
@@ -43,7 +38,8 @@ class ParentOverviewPage extends StatelessWidget {
           return _EmptyCard(
             accent: accent,
             title: 'Bağlı öğrenci yok',
-            message: 'Admin panelinden veli-öğrenci eşleştirmesini kontrol edin.',
+            message:
+                'Admin panelinden veli-öğrenci eşleştirmesini kontrol edin.',
           );
         }
 
@@ -146,10 +142,7 @@ class _ReportHero extends StatelessWidget {
       padding: const EdgeInsets.all(25),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [
-            Color(0xFF1E293B),
-            Color(0xFFF59E0B),
-          ],
+          colors: [Color(0xFF1E293B), Color(0xFFF59E0B)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -190,7 +183,7 @@ class _ReportHero extends StatelessWidget {
                         color: Colors.white,
                         fontWeight: FontWeight.w900,
                         fontSize: 27,
-                        letterSpacing: -0.9,
+                        letterSpacing: 0,
                       ),
                     ),
                     const SizedBox(height: 5),
@@ -228,7 +221,7 @@ class _ReportHero extends StatelessWidget {
                       color: Colors.white,
                       fontWeight: FontWeight.w900,
                       fontSize: 30,
-                      letterSpacing: -1,
+                      letterSpacing: 0,
                     ),
                   ),
                 ),
@@ -270,7 +263,7 @@ class _MiniStat extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
@@ -284,7 +277,7 @@ class _MiniStat extends StatelessWidget {
               color: color,
               fontWeight: FontWeight.w900,
               fontSize: 29,
-              letterSpacing: -1,
+              letterSpacing: 0,
             ),
           ),
           Text(
@@ -319,8 +312,8 @@ class _ParentInsightCard extends StatelessWidget {
     final message = total == 0
         ? 'Öğrencinin sınıfına henüz ödev verilmemiş.'
         : submitted == total
-            ? 'Tüm ödevler teslim edilmiş. Harika gidiyor.'
-            : '$total ödevden $submitted tanesi teslim edilmiş. Kalan ödevleri Durum sekmesinden takip edebilirsiniz.';
+        ? 'Tüm ödevler teslim edilmiş. Harika gidiyor.'
+        : '$total ödevden $submitted tanesi teslim edilmiş. Kalan ödevleri Durum sekmesinden takip edebilirsiniz.';
 
     return Container(
       width: double.infinity,
@@ -328,7 +321,7 @@ class _ParentInsightCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Row(

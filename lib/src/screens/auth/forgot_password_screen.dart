@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/app_helpers.dart';
@@ -22,11 +22,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   String _error = '';
   String _success = '';
 
-  final List<String> _roles = const [
-    'Öğrenci',
-    'Öğretmen',
-    'Veli',
-  ];
+  final List<String> _roles = const ['Öğrenci', 'Öğretmen', 'Veli'];
 
   @override
   void dispose() {
@@ -102,11 +98,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              color,
-              const Color(0xFF0F172A),
-              const Color(0xFF020617),
-            ],
+            colors: [color, const Color(0xFF0F172A), const Color(0xFF020617)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -148,10 +140,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         height: 76,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [
-                              color,
-                              AppTheme.cyan,
-                            ],
+                            colors: [color, AppTheme.cyan],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -172,7 +161,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           color: AppTheme.dark,
                           fontWeight: FontWeight.w900,
                           fontSize: 27,
-                          letterSpacing: -0.8,
+                          letterSpacing: 0,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -187,27 +176,18 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                       const SizedBox(height: 20),
                       if (_error.isNotEmpty) ...[
-                        _StateBox(
-                          text: _error,
-                          success: false,
-                        ),
+                        _StateBox(text: _error, success: false),
                         const SizedBox(height: 14),
                       ],
                       if (_success.isNotEmpty) ...[
-                        _StateBox(
-                          text: _success,
-                          success: true,
-                        ),
+                        _StateBox(text: _success, success: true),
                         const SizedBox(height: 14),
                       ],
                       DropdownButtonFormField<String>(
-                        value: _role,
+                        initialValue: _role,
                         items: _roles
                             .map(
-                              (x) => DropdownMenuItem(
-                                value: x,
-                                child: Text(x),
-                              ),
+                              (x) => DropdownMenuItem(value: x, child: Text(x)),
                             )
                             .toList(),
                         onChanged: (value) {
@@ -321,10 +301,7 @@ class _StateBox extends StatelessWidget {
   final String text;
   final bool success;
 
-  const _StateBox({
-    required this.text,
-    required this.success,
-  });
+  const _StateBox({required this.text, required this.success});
 
   @override
   Widget build(BuildContext context) {
@@ -338,9 +315,7 @@ class _StateBox extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: border,
-        ),
+        border: Border.all(color: border),
       ),
       child: Row(
         children: [

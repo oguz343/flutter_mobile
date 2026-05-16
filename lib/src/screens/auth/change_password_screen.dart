@@ -97,11 +97,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              color,
-              const Color(0xFF0F172A),
-              const Color(0xFF020617),
-            ],
+            colors: [color, const Color(0xFF0F172A), const Color(0xFF020617)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -134,10 +130,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                         height: 76,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [
-                              color,
-                              AppTheme.cyan,
-                            ],
+                            colors: [color, AppTheme.cyan],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -158,7 +151,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                           color: AppTheme.dark,
                           fontWeight: FontWeight.w900,
                           fontSize: 27,
-                          letterSpacing: -0.8,
+                          letterSpacing: 0,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -267,9 +260,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 class _ErrorBox extends StatelessWidget {
   final String text;
 
-  const _ErrorBox({
-    required this.text,
-  });
+  const _ErrorBox({required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -279,9 +270,7 @@ class _ErrorBox extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFEE2E2),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(0xFFFCA5A5),
-        ),
+        border: Border.all(color: const Color(0xFFFCA5A5)),
       ),
       child: Text(
         text,

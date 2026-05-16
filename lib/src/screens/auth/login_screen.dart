@@ -34,34 +34,22 @@ class _LoginScreenState extends State<LoginScreen>
     _RoleOption(
       label: 'Öğrenci',
       icon: Icons.backpack_rounded,
-      gradient: [
-        Color(0xFF10B981),
-        Color(0xFF06B6D4),
-      ],
+      gradient: [Color(0xFF10B981), Color(0xFF06B6D4)],
     ),
     _RoleOption(
       label: 'Öğretmen',
       icon: Icons.co_present_rounded,
-      gradient: [
-        Color(0xFF06B6D4),
-        Color(0xFF2563EB),
-      ],
+      gradient: [Color(0xFF06B6D4), Color(0xFF2563EB)],
     ),
     _RoleOption(
       label: 'Veli',
       icon: Icons.family_restroom_rounded,
-      gradient: [
-        Color(0xFFF59E0B),
-        Color(0xFFF97316),
-      ],
+      gradient: [Color(0xFFF59E0B), Color(0xFFF97316)],
     ),
     _RoleOption(
       label: 'Admin',
       icon: Icons.admin_panel_settings_rounded,
-      gradient: [
-        Color(0xFF4F46E5),
-        Color(0xFF9333EA),
-      ],
+      gradient: [Color(0xFF4F46E5), Color(0xFF9333EA)],
     ),
   ];
 
@@ -118,10 +106,9 @@ class _LoginScreenState extends State<LoginScreen>
       }
 
       if (result.requiresPasswordChange) {
-        Navigator.of(context).pushNamedAndRemoveUntil(
-          '/change-password',
-          (route) => false,
-        );
+        Navigator.of(
+          context,
+        ).pushNamedAndRemoveUntil('/change-password', (route) => false);
         return;
       }
 
@@ -172,14 +159,8 @@ class _LoginScreenState extends State<LoginScreen>
                     0.15,
                   )!,
                 ],
-                begin: Alignment(
-                  cos(t) * 0.7,
-                  sin(t) * 0.7,
-                ),
-                end: Alignment(
-                  -cos(t) * 0.7,
-                  -sin(t) * 0.7,
-                ),
+                begin: Alignment(cos(t) * 0.7, sin(t) * 0.7),
+                end: Alignment(-cos(t) * 0.7, -sin(t) * 0.7),
               ),
             ),
             child: Stack(
@@ -227,34 +208,29 @@ class _LoginScreenState extends State<LoginScreen>
                           curve: Curves.easeOut,
                         ),
                         child: SlideTransition(
-                          position: Tween<Offset>(
-                            begin: const Offset(0, 0.08),
-                            end: Offset.zero,
-                          ).animate(
-                            CurvedAnimation(
-                              parent: _panelController,
-                              curve: Curves.easeOutCubic,
-                            ),
-                          ),
+                          position:
+                              Tween<Offset>(
+                                begin: const Offset(0, 0.08),
+                                end: Offset.zero,
+                              ).animate(
+                                CurvedAnimation(
+                                  parent: _panelController,
+                                  curve: Curves.easeOutCubic,
+                                ),
+                              ),
                           child: ConstrainedBox(
-                            constraints: const BoxConstraints(
-                              maxWidth: 1100,
-                            ),
+                            constraints: const BoxConstraints(maxWidth: 1100),
                             child: compact
                                 ? Column(
                                     children: [
-                                      _BrandPanel(
-                                        role: role,
-                                        compact: true,
-                                      ),
+                                      _BrandPanel(role: role, compact: true),
                                       const SizedBox(height: 16),
                                       _LoginCard(
                                         roles: _roles,
                                         role: _role,
                                         selectedRole: role,
                                         numberController: _numberController,
-                                        passwordController:
-                                            _passwordController,
+                                        passwordController: _passwordController,
                                         loading: _loading,
                                         obscure: _obscure,
                                         error: _error,
@@ -331,10 +307,7 @@ class _BrandPanel extends StatelessWidget {
   final _RoleOption role;
   final bool compact;
 
-  const _BrandPanel({
-    required this.role,
-    required this.compact,
-  });
+  const _BrandPanel({required this.role, required this.compact});
 
   @override
   Widget build(BuildContext context) {
@@ -344,9 +317,7 @@ class _BrandPanel extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: compact ? 0.10 : 0.08),
         borderRadius: BorderRadius.circular(38),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.16),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.18),
@@ -367,12 +338,12 @@ class _BrandPanel extends StatelessWidget {
               fontWeight: FontWeight.w900,
               fontSize: compact ? 38 : 58,
               height: 0.95,
-              letterSpacing: -2.2,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 16),
           Text(
-            'Öğrenci, öğretmen, veli ve admin için tek merkezli premium okul yönetim deneyimi.',
+            'Ödev, teslim, duyuru ve rapor akışları tek okul panelinde birleşir.',
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.78),
               fontWeight: FontWeight.w700,
@@ -385,22 +356,10 @@ class _BrandPanel extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: const [
-              _FeaturePill(
-                icon: Icons.swipe_rounded,
-                text: 'Swipe panel',
-              ),
-              _FeaturePill(
-                icon: Icons.flash_on_rounded,
-                text: 'Canlı veri',
-              ),
-              _FeaturePill(
-                icon: Icons.security_rounded,
-                text: 'Rol güvenliği',
-              ),
-              _FeaturePill(
-                icon: Icons.auto_awesome_rounded,
-                text: 'Premium arayüz',
-              ),
+              _FeaturePill(icon: Icons.swipe_rounded, text: 'Paneller'),
+              _FeaturePill(icon: Icons.flash_on_rounded, text: 'Ödevler'),
+              _FeaturePill(icon: Icons.security_rounded, text: 'Teslimler'),
+              _FeaturePill(icon: Icons.auto_awesome_rounded, text: 'Raporlar'),
             ],
           ),
           if (!compact) ...[
@@ -419,11 +378,7 @@ class _BrandPanel extends StatelessWidget {
                   color: role.gradient.last,
                 ),
                 const SizedBox(width: 12),
-                _MiniMetric(
-                  value: '100%',
-                  label: 'Mobil',
-                  color: Colors.white,
-                ),
+                _MiniMetric(value: '100%', label: 'Mobil', color: Colors.white),
               ],
             ),
           ],
@@ -436,9 +391,7 @@ class _BrandPanel extends StatelessWidget {
 class _TopBrand extends StatelessWidget {
   final _RoleOption role;
 
-  const _TopBrand({
-    required this.role,
-  });
+  const _TopBrand({required this.role});
 
   @override
   Widget build(BuildContext context) {
@@ -462,11 +415,7 @@ class _TopBrand extends StatelessWidget {
               ),
             ],
           ),
-          child: Icon(
-            role.icon,
-            color: Colors.white,
-            size: 30,
-          ),
+          child: Icon(role.icon, color: Colors.white, size: 30),
         ),
         const SizedBox(width: 14),
         Expanded(
@@ -479,7 +428,7 @@ class _TopBrand extends StatelessWidget {
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
                   fontSize: 18,
-                  letterSpacing: -0.4,
+                  letterSpacing: 0,
                 ),
               ),
               const SizedBox(height: 3),
@@ -535,9 +484,7 @@ class _LoginCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.96),
         borderRadius: BorderRadius.circular(38),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.9),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.9)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.22),
@@ -551,11 +498,7 @@ class _LoginCard extends StatelessWidget {
         children: [
           _LoginHeader(role: selectedRole),
           const SizedBox(height: 18),
-          _RoleGrid(
-            roles: roles,
-            selected: role,
-            onChanged: onRoleChanged,
-          ),
+          _RoleGrid(roles: roles, selected: role, onChanged: onRoleChanged),
           const SizedBox(height: 18),
           if (error.isNotEmpty) ...[
             _ErrorBanner(text: error),
@@ -567,9 +510,7 @@ class _LoginCard extends StatelessWidget {
             textInputAction: TextInputAction.next,
             inputFormatters: isAdmin
                 ? null
-                : [
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
+                : [FilteringTextInputFormatter.digitsOnly],
             decoration: InputDecoration(
               labelText: isAdmin ? 'Admin No' : 'Numara',
               hintText: isAdmin ? '0000' : 'Okul / kullanıcı numarası',
@@ -610,9 +551,7 @@ class _LoginCard extends StatelessWidget {
               label: const Text('Şifremi unuttum'),
               style: TextButton.styleFrom(
                 foregroundColor: selectedRole.gradient.first,
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                ),
+                textStyle: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ),
           ),
@@ -684,9 +623,7 @@ class _LoginCard extends StatelessWidget {
 class _LoginHeader extends StatelessWidget {
   final _RoleOption role;
 
-  const _LoginHeader({
-    required this.role,
-  });
+  const _LoginHeader({required this.role});
 
   @override
   Widget build(BuildContext context) {
@@ -703,11 +640,7 @@ class _LoginHeader extends StatelessWidget {
             ),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: Icon(
-            role.icon,
-            color: Colors.white,
-            size: 28,
-          ),
+          child: Icon(role.icon, color: Colors.white, size: 28),
         ),
         const SizedBox(width: 13),
         Expanded(
@@ -720,7 +653,7 @@ class _LoginHeader extends StatelessWidget {
                   color: AppTheme.dark,
                   fontWeight: FontWeight.w900,
                   fontSize: 24,
-                  letterSpacing: -0.8,
+                  letterSpacing: 0,
                 ),
               ),
               const SizedBox(height: 4),
@@ -781,7 +714,7 @@ class _RoleGrid extends StatelessWidget {
             color: active ? null : const Color(0xFFF8FAFC),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: active ? Colors.transparent : const Color(0xFFE2E8F0),
+              color: active ? Colors.transparent : AppTheme.line,
             ),
             boxShadow: active
                 ? [
@@ -832,9 +765,7 @@ class _RoleGrid extends StatelessWidget {
 class _ErrorBanner extends StatelessWidget {
   final String text;
 
-  const _ErrorBanner({
-    required this.text,
-  });
+  const _ErrorBanner({required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -844,9 +775,7 @@ class _ErrorBanner extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFEE2E2),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: const Color(0xFFFCA5A5),
-        ),
+        border: Border.all(color: const Color(0xFFFCA5A5)),
       ),
       child: Row(
         children: [
@@ -876,9 +805,7 @@ class _ErrorBanner extends StatelessWidget {
 class _SecurityNote extends StatelessWidget {
   final Color color;
 
-  const _SecurityNote({
-    required this.color,
-  });
+  const _SecurityNote({required this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -887,17 +814,11 @@ class _SecurityNote extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: color.withValues(alpha: 0.15),
-        ),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.verified_user_rounded,
-            color: color,
-            size: 20,
-          ),
+          Icon(Icons.verified_user_rounded, color: color, size: 20),
           const SizedBox(width: 9),
           const Expanded(
             child: Text(
@@ -920,33 +841,21 @@ class _FeaturePill extends StatelessWidget {
   final IconData icon;
   final String text;
 
-  const _FeaturePill({
-    required this.icon,
-    required this.text,
-  });
+  const _FeaturePill({required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 13,
-        vertical: 10,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.16),
-        ),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: Colors.white,
-            size: 17,
-          ),
+          Icon(icon, color: Colors.white, size: 17),
           const SizedBox(width: 7),
           Text(
             text,
@@ -982,9 +891,7 @@ class _MiniMetric extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white.withValues(alpha: 0.10),
           borderRadius: BorderRadius.circular(26),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.14),
-          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -995,7 +902,7 @@ class _MiniMetric extends StatelessWidget {
                 color: color == Colors.white ? Colors.white : color,
                 fontWeight: FontWeight.w900,
                 fontSize: 24,
-                letterSpacing: -0.8,
+                letterSpacing: 0,
               ),
             ),
             const Spacer(),

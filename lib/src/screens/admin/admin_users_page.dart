@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/app_helpers.dart';
@@ -9,10 +9,7 @@ import '../../services/admin_user_service.dart';
 class AdminUsersPage extends StatefulWidget {
   final Color accent;
 
-  const AdminUsersPage({
-    super.key,
-    required this.accent,
-  });
+  const AdminUsersPage({super.key, required this.accent});
 
   @override
   State<AdminUsersPage> createState() => _AdminUsersPageState();
@@ -30,9 +27,7 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
       stream: _service.watchUsers(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
@@ -101,7 +96,8 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
 
     return users.where((user) {
       final roleMatch =
-          filterKey == 'tumu' || AppHelpers.normalizeKey(user.role) == filterKey;
+          filterKey == 'tumu' ||
+          AppHelpers.normalizeKey(user.role) == filterKey;
 
       final userKey = AppHelpers.normalizeKey(
         '${user.name}_${user.role}_${user.number}_${user.className}_${user.branch}_${user.phone}',
@@ -113,19 +109,13 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
     }).toList();
   }
 
-  void _openUserSheet(
-    BuildContext context, {
-    AppUser? user,
-  }) {
+  void _openUserSheet(BuildContext context, {AppUser? user}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _UserSheet(
-        accent: widget.accent,
-        user: user,
-      ),
+      builder: (_) => _UserSheet(accent: widget.accent, user: user),
     );
   }
 
@@ -161,20 +151,16 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Kullanıcı silindi.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Kullanıcı silindi.')));
     } catch (_) {
       if (!mounted) {
         return;
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Kullanıcı silinirken hata oluştu.'),
-        ),
+        const SnackBar(content: Text('Kullanıcı silinirken hata oluştu.')),
       );
     }
   }
@@ -185,11 +171,7 @@ class _Hero extends StatelessWidget {
   final int count;
   final VoidCallback onAdd;
 
-  const _Hero({
-    required this.accent,
-    required this.count,
-    required this.onAdd,
-  });
+  const _Hero({required this.accent, required this.count, required this.onAdd});
 
   @override
   Widget build(BuildContext context) {
@@ -198,10 +180,7 @@ class _Hero extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            accent,
-            const Color(0xFF06B6D4),
-          ],
+          colors: [accent, const Color(0xFF06B6D4)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -242,7 +221,7 @@ class _Hero extends StatelessWidget {
                         color: Colors.white,
                         fontWeight: FontWeight.w900,
                         fontSize: 25,
-                        letterSpacing: -0.7,
+                        letterSpacing: 0,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -274,9 +253,7 @@ class _Hero extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
                 ),
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                ),
+                textStyle: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ),
           ),
@@ -303,13 +280,7 @@ class _SearchAndFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final roles = [
-      'Tümü',
-      'Öğrenci',
-      'Öğretmen',
-      'Veli',
-      'Admin',
-    ];
+    final roles = ['Tümü', 'Öğrenci', 'Öğretmen', 'Veli', 'Admin'];
 
     return Container(
       padding: const EdgeInsets.all(15),
@@ -317,9 +288,7 @@ class _SearchAndFilter extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
         boxShadow: AppTheme.softShadow,
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
       ),
       child: Column(
         children: [
@@ -333,14 +302,9 @@ class _SearchAndFilter extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
-            value: roleFilter,
+            initialValue: roleFilter,
             items: roles
-                .map(
-                  (x) => DropdownMenuItem(
-                    value: x,
-                    child: Text(x),
-                  ),
-                )
+                .map((x) => DropdownMenuItem(value: x, child: Text(x)))
                 .toList(),
             onChanged: (value) {
               if (value != null) {
@@ -377,18 +341,18 @@ class _UserCard extends StatelessWidget {
     final roleColor = roleKey == 'ogrenci'
         ? const Color(0xFF10B981)
         : roleKey == 'ogretmen'
-            ? const Color(0xFF06B6D4)
-            : roleKey == 'veli'
-                ? const Color(0xFFF59E0B)
-                : accent;
+        ? const Color(0xFF06B6D4)
+        : roleKey == 'veli'
+        ? const Color(0xFFF59E0B)
+        : accent;
 
     final detail = roleKey == 'ogrenci'
         ? 'Sınıf: ${user.className.isEmpty ? '-' : user.className}'
         : roleKey == 'ogretmen'
-            ? 'Branş: ${user.branch.isEmpty ? '-' : user.branch}'
-            : roleKey == 'veli'
-                ? 'Bağlı öğrenci: ${user.linkedStudentNo.isEmpty ? '-' : user.linkedStudentNo}'
-                : 'Admin hesabı';
+        ? 'Branş: ${user.branch.isEmpty ? '-' : user.branch}'
+        : roleKey == 'veli'
+        ? 'Bağlı öğrenci: ${user.linkedStudentNo.isEmpty ? '-' : user.linkedStudentNo}'
+        : 'Admin hesabı';
 
     return Container(
       padding: const EdgeInsets.all(15),
@@ -396,9 +360,7 @@ class _UserCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(26),
         boxShadow: AppTheme.softShadow,
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
       ),
       child: Row(
         children: [
@@ -413,10 +375,10 @@ class _UserCard extends StatelessWidget {
               roleKey == 'ogrenci'
                   ? Icons.backpack_rounded
                   : roleKey == 'ogretmen'
-                      ? Icons.co_present_rounded
-                      : roleKey == 'veli'
-                          ? Icons.family_restroom_rounded
-                          : Icons.admin_panel_settings_rounded,
+                  ? Icons.co_present_rounded
+                  : roleKey == 'veli'
+                  ? Icons.family_restroom_rounded
+                  : Icons.admin_panel_settings_rounded,
               color: roleColor,
             ),
           ),
@@ -458,17 +420,11 @@ class _UserCard extends StatelessWidget {
           ),
           IconButton(
             onPressed: onEdit,
-            icon: Icon(
-              Icons.edit_rounded,
-              color: accent,
-            ),
+            icon: Icon(Icons.edit_rounded, color: accent),
           ),
           IconButton(
             onPressed: onDelete,
-            icon: const Icon(
-              Icons.delete_rounded,
-              color: Color(0xFFEF4444),
-            ),
+            icon: const Icon(Icons.delete_rounded, color: Color(0xFFEF4444)),
           ),
         ],
       ),
@@ -480,10 +436,7 @@ class _UserSheet extends StatefulWidget {
   final Color accent;
   final AppUser? user;
 
-  const _UserSheet({
-    required this.accent,
-    this.user,
-  });
+  const _UserSheet({required this.accent, this.user});
 
   @override
   State<_UserSheet> createState() => _UserSheetState();
@@ -527,7 +480,7 @@ class _UserSheetState extends State<_UserSheet> {
         _className = AppHelpers.normalizeClassName(user.className);
       }
     } else {
-      _passwordController.text = '123456';
+      _passwordController.text = _service.generateActivationCode();
     }
   }
 
@@ -562,8 +515,9 @@ class _UserSheetState extends State<_UserSheet> {
           phone: _phoneController.text,
           className: _role == 'Öğrenci' ? _className : '',
           branch: _role == 'Öğretmen' ? _branchController.text : '',
-          linkedStudentNo:
-              _role == 'Veli' ? _linkedStudentNoController.text : '',
+          linkedStudentNo: _role == 'Veli'
+              ? _linkedStudentNoController.text
+              : '',
         );
       } else {
         await _service.createUser(
@@ -575,8 +529,9 @@ class _UserSheetState extends State<_UserSheet> {
           phone: _phoneController.text,
           className: _role == 'Öğrenci' ? _className : '',
           branch: _role == 'Öğretmen' ? _branchController.text : '',
-          linkedStudentNo:
-              _role == 'Veli' ? _linkedStudentNoController.text : '',
+          linkedStudentNo: _role == 'Veli'
+              ? _linkedStudentNoController.text
+              : '',
         );
       }
 
@@ -588,7 +543,9 @@ class _UserSheetState extends State<_UserSheet> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(editing ? 'Kullanıcı güncellendi.' : 'Kullanıcı eklendi.'),
+          content: Text(
+            editing ? 'Kullanıcı güncellendi.' : 'Kullanıcı eklendi.',
+          ),
         ),
       );
     } on AdminUserException catch (e) {
@@ -600,6 +557,24 @@ class _UserSheetState extends State<_UserSheet> {
         setState(() => _loading = false);
       }
     }
+  }
+
+  Future<void> _copyActivationCode() async {
+    await Clipboard.setData(ClipboardData(text: _passwordController.text));
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Aktivasyon kodu kopyalandı.')),
+    );
+  }
+
+  void _renewActivationCode() {
+    setState(() {
+      _passwordController.text = _service.generateActivationCode();
+    });
   }
 
   @override
@@ -618,9 +593,7 @@ class _UserSheetState extends State<_UserSheet> {
         padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(34),
-          ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(34)),
         ),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -632,7 +605,7 @@ class _UserSheetState extends State<_UserSheet> {
                 width: 46,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
+                  color: AppTheme.line,
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -661,7 +634,7 @@ class _UserSheetState extends State<_UserSheet> {
                         color: AppTheme.dark,
                         fontWeight: FontWeight.w900,
                         fontSize: 21,
-                        letterSpacing: -0.5,
+                        letterSpacing: 0,
                       ),
                     ),
                   ),
@@ -688,14 +661,9 @@ class _UserSheetState extends State<_UserSheet> {
                 const SizedBox(height: 12),
               ],
               DropdownButtonFormField<String>(
-                value: roles.contains(_role) ? _role : 'Öğrenci',
+                initialValue: roles.contains(_role) ? _role : 'Öğrenci',
                 items: roles
-                    .map(
-                      (x) => DropdownMenuItem(
-                        value: x,
-                        child: Text(x),
-                      ),
-                    )
+                    .map((x) => DropdownMenuItem(value: x, child: Text(x)))
                     .toList(),
                 onChanged: (value) {
                   if (value != null) {
@@ -720,17 +688,17 @@ class _UserSheetState extends State<_UserSheet> {
               const SizedBox(height: 12),
               TextField(
                 controller: _numberController,
-                keyboardType:
-                    _role == 'Admin' ? TextInputType.text : TextInputType.number,
+                keyboardType: _role == 'Admin'
+                    ? TextInputType.text
+                    : TextInputType.number,
                 textInputAction: TextInputAction.next,
                 inputFormatters: _role == 'Admin'
                     ? null
-                    : [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
+                    : [FilteringTextInputFormatter.digitsOnly],
                 decoration: InputDecoration(
-                  labelText:
-                      _role == 'Admin' ? 'Admin No / Kullanıcı Adı' : 'Numara',
+                  labelText: _role == 'Admin'
+                      ? 'Admin No / Kullanıcı Adı'
+                      : 'Numara',
                   hintText: _role == 'Admin'
                       ? 'Örn: 0000'
                       : 'Okul / kullanıcı numarası',
@@ -739,14 +707,11 @@ class _UserSheetState extends State<_UserSheet> {
               ),
               if (!editing) ...[
                 const SizedBox(height: 12),
-                TextField(
-                  controller: _passwordController,
-                  textInputAction: TextInputAction.next,
-                  decoration: const InputDecoration(
-                    labelText: 'Geçici Şifre',
-                    hintText: 'İlk girişte değiştirilecek',
-                    prefixIcon: Icon(Icons.lock_rounded),
-                  ),
+                _ActivationCodeCard(
+                  code: _passwordController.text,
+                  accent: widget.accent,
+                  onCopy: _copyActivationCode,
+                  onRenew: _renewActivationCode,
                 ),
               ],
               const SizedBox(height: 12),
@@ -769,9 +734,7 @@ class _UserSheetState extends State<_UserSheet> {
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
                 textInputAction: TextInputAction.next,
-                inputFormatters: [
-                  TurkishPhoneInputFormatter(),
-                ],
+                inputFormatters: [TurkishPhoneInputFormatter()],
                 decoration: const InputDecoration(
                   labelText: 'Telefon',
                   hintText: '0 (5xx) xxx xx xx',
@@ -781,14 +744,11 @@ class _UserSheetState extends State<_UserSheet> {
               if (_role == 'Öğrenci') ...[
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: classes.contains(_className) ? _className : classes.first,
+                  initialValue: classes.contains(_className)
+                      ? _className
+                      : classes.first,
                   items: classes
-                      .map(
-                        (x) => DropdownMenuItem(
-                          value: x,
-                          child: Text(x),
-                        ),
-                      )
+                      .map((x) => DropdownMenuItem(value: x, child: Text(x)))
                       .toList(),
                   onChanged: (value) {
                     if (value != null) {
@@ -819,9 +779,7 @@ class _UserSheetState extends State<_UserSheet> {
                   controller: _linkedStudentNoController,
                   keyboardType: TextInputType.number,
                   textInputAction: TextInputAction.next,
-                  inputFormatters: [
-                    FilteringTextInputFormatter.digitsOnly,
-                  ],
+                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   decoration: const InputDecoration(
                     labelText: 'Bağlı Öğrenci Numarası',
                     hintText: 'Velinin göreceği öğrencinin numarası',
@@ -854,15 +812,94 @@ class _UserSheetState extends State<_UserSheet> {
                         )
                       : Text(
                           editing ? 'Kaydet' : 'Kullanıcı Ekle',
-                          style: const TextStyle(
-                            fontWeight: FontWeight.w900,
-                          ),
+                          style: const TextStyle(fontWeight: FontWeight.w900),
                         ),
                 ),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _ActivationCodeCard extends StatelessWidget {
+  final String code;
+  final Color accent;
+  final VoidCallback onCopy;
+  final VoidCallback onRenew;
+
+  const _ActivationCodeCard({
+    required this.code,
+    required this.accent,
+    required this.onCopy,
+    required this.onRenew,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppTheme.line),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(Icons.key_rounded, color: accent),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Aktivasyon Kodu',
+                  style: TextStyle(
+                    color: AppTheme.muted,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 12,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                SelectableText(
+                  code,
+                  style: const TextStyle(
+                    color: AppTheme.dark,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 24,
+                    letterSpacing: 2,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            tooltip: 'Yeni kod üret',
+            onPressed: onRenew,
+            icon: const Icon(Icons.refresh_rounded),
+            color: const Color(0xFF64748B),
+          ),
+          IconButton.filled(
+            tooltip: 'Kopyala',
+            onPressed: onCopy,
+            icon: const Icon(Icons.copy_rounded),
+            style: IconButton.styleFrom(
+              backgroundColor: accent,
+              foregroundColor: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -946,17 +983,11 @@ class _MessageCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
         boxShadow: AppTheme.softShadow,
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.info_rounded,
-            color: accent,
-            size: 42,
-          ),
+          Icon(Icons.info_rounded, color: accent, size: 42),
           const SizedBox(height: 12),
           Text(
             title,
@@ -986,10 +1017,7 @@ class _MessageCard extends StatelessWidget {
     }
 
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: card,
-      ),
+      child: Padding(padding: const EdgeInsets.all(18), child: card),
     );
   }
 }

@@ -37,153 +37,109 @@ class AppUser {
     final data = doc.data() ?? <String, dynamic>{};
 
     final role = AppHelpers.normalizeRoleForSave(
-      AppHelpers.getText(
-        data,
-        [
-          'role',
-          'Role',
-          'userRole',
-          'UserRole',
-        ],
-      ),
+      AppHelpers.getText(data, ['role', 'Role', 'userRole', 'UserRole']),
     );
 
-    final name = AppHelpers.getText(
-      data,
-      [
-        'name',
-        'Name',
-        'fullName',
-        'FullName',
-        'userName',
-        'UserName',
-        'displayName',
-        'DisplayName',
-      ],
-      defaultValue: 'Kullanıcı',
-    );
+    final name = AppHelpers.getText(data, [
+      'name',
+      'Name',
+      'fullName',
+      'FullName',
+      'userName',
+      'UserName',
+      'displayName',
+      'DisplayName',
+    ], defaultValue: 'Kullanıcı');
 
     final number = AppHelpers.onlyDigits(
-      AppHelpers.getText(
-        data,
-        [
-          'number',
-          'Number',
-          'schoolNo',
-          'SchoolNo',
-          'studentNo',
-          'StudentNo',
-          'teacherNo',
-          'TeacherNo',
-          'adminNo',
-          'AdminNo',
-          'adminNumber',
-          'AdminNumber',
-        ],
-      ),
+      AppHelpers.getText(data, [
+        'number',
+        'Number',
+        'schoolNo',
+        'SchoolNo',
+        'studentNo',
+        'StudentNo',
+        'teacherNo',
+        'TeacherNo',
+        'adminNo',
+        'AdminNo',
+        'adminNumber',
+        'AdminNumber',
+      ]),
     );
 
     final tc = AppHelpers.onlyDigits(
-      AppHelpers.getText(
-        data,
-        [
-          'tc',
-          'TC',
-          'identityNo',
-          'IdentityNo',
-        ],
-      ),
+      AppHelpers.getText(data, ['tc', 'TC', 'identityNo', 'IdentityNo']),
     );
 
-    final phone = AppHelpers.getText(
-      data,
-      [
-        'phone',
-        'Phone',
-        'telephone',
-        'Telephone',
-        'parentPhone',
-        'ParentPhone',
-      ],
-    );
+    final phone = AppHelpers.getText(data, [
+      'phone',
+      'Phone',
+      'telephone',
+      'Telephone',
+      'parentPhone',
+      'ParentPhone',
+    ]);
 
     final className = AppHelpers.normalizeClassName(
-      AppHelpers.getText(
-        data,
-        [
-          'className',
-          'ClassName',
-          'class',
-          'Class',
-          'studentClass',
-          'StudentClass',
-        ],
-      ),
+      AppHelpers.getText(data, [
+        'className',
+        'ClassName',
+        'class',
+        'Class',
+        'studentClass',
+        'StudentClass',
+      ]),
     );
 
-    final branch = AppHelpers.getText(
-      data,
-      [
-        'branch',
-        'Branch',
-        'teacherBranch',
-        'TeacherBranch',
-      ],
-    );
+    final branch = AppHelpers.getText(data, [
+      'branch',
+      'Branch',
+      'teacherBranch',
+      'TeacherBranch',
+    ]);
 
     final linkedStudentNo = AppHelpers.onlyDigits(
-      AppHelpers.getText(
-        data,
-        [
-          'linkedStudentNo',
-          'LinkedStudentNo',
-          'studentNumber',
-          'StudentNumber',
-          'childNo',
-          'ChildNo',
-        ],
-      ),
+      AppHelpers.getText(data, [
+        'linkedStudentNo',
+        'LinkedStudentNo',
+        'studentNumber',
+        'StudentNumber',
+        'childNo',
+        'ChildNo',
+      ]),
     );
 
-    final password = AppHelpers.getText(
-      data,
-      [
-        'password',
-        'Password',
-        'adminPassword',
-        'AdminPassword',
-        'pass',
-        'Pass',
-        'sifre',
-        'Sifre',
-        'şifre',
-        'Şifre',
-      ],
-    );
+    final password = AppHelpers.getText(data, [
+      'password',
+      'Password',
+      'adminPassword',
+      'AdminPassword',
+      'pass',
+      'Pass',
+      'sifre',
+      'Sifre',
+      'şifre',
+      'Şifre',
+    ]);
 
-    final activationCode = AppHelpers.getText(
-      data,
-      [
-        'activationCode',
-        'ActivationCode',
-        'activation',
-        'Activation',
-        'code',
-        'Code',
-      ],
-    );
+    final activationCode = AppHelpers.getText(data, [
+      'activationCode',
+      'ActivationCode',
+      'activation',
+      'Activation',
+      'code',
+      'Code',
+    ]);
 
-    final mustChangePassword = AppHelpers.getBool(
-      data,
-      [
-        'mustChangePassword',
-        'MustChangePassword',
-        'firstLogin',
-        'FirstLogin',
-        'isFirstLogin',
-        'IsFirstLogin',
-      ],
-    );
+    final mustChangePassword = AppHelpers.getBool(data, [
+      'mustChangePassword',
+      'MustChangePassword',
+      'firstLogin',
+      'FirstLogin',
+      'isFirstLogin',
+      'IsFirstLogin',
+    ]);
 
     return AppUser(
       id: doc.id,

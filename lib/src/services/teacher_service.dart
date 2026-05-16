@@ -80,16 +80,19 @@ class TeacherService {
     }
 
     void listenTo(String collection) {
-      final sub = _db.collection(collection).snapshots().listen(
-        (_) {
-          emit();
-        },
-        onError: (error) {
-          if (!controller.isClosed) {
-            controller.addError(error);
-          }
-        },
-      );
+      final sub = _db
+          .collection(collection)
+          .snapshots()
+          .listen(
+            (_) {
+              emit();
+            },
+            onError: (error) {
+              if (!controller.isClosed) {
+                controller.addError(error);
+              }
+            },
+          );
 
       subscriptions.add(sub);
     }
@@ -125,22 +128,20 @@ class TeacherService {
       for (final doc in snapshot.docs) {
         final data = doc.data();
 
-        if (AppHelpers.isDeleted(data)) {
+        if (AppHelpers.isDeletedOrInactive(data)) {
           continue;
         }
 
         final lesson = LessonModel.fromDoc(doc);
 
-        final docTeacherNo = AppHelpers.onlyDigits(lesson.teacherNo);
-        final docTeacherNameKey = AppHelpers.normalizeKey(lesson.teacherName);
-        final docBranchKey = AppHelpers.normalizeKey(lesson.branch);
-
-        final sameTeacher =
-            (teacherNo.isNotEmpty && docTeacherNo == teacherNo) ||
-            (teacherNameKey.isNotEmpty && docTeacherNameKey == teacherNameKey) ||
-            (branchKey.isNotEmpty && docBranchKey == branchKey);
-
-        if (!sameTeacher) {
+        if (!_lessonBelongsToTeacher(
+          lesson: lesson,
+          data: data,
+          teacher: teacher,
+          teacherNo: teacherNo,
+          teacherNameKey: teacherNameKey,
+          branchKey: branchKey,
+        )) {
           continue;
         }
 
@@ -174,10 +175,7 @@ class TeacherService {
     required AppUser teacher,
     required List<LessonModel> lessons,
   }) async {
-    final collections = [
-      'homeworks',
-      'assignments',
-    ];
+    final collections = ['homeworks', 'assignments'];
 
     final result = <AssignmentModel>[];
     final seen = <String>{};
@@ -187,10 +185,9 @@ class TeacherService {
     final branchKey = AppHelpers.normalizeKey(teacher.branch);
 
     final lessonKeys = lessons
-        .map(
-          (x) => AppHelpers.normalizeKey('${x.name}_${x.className}'),
-        )
+        .map((x) => AppHelpers.normalizeKey('${x.name}_${x.className}'))
         .toSet();
+    final lessonIds = lessons.map((x) => x.id).toSet();
 
     for (final collection in collections) {
       try {
@@ -199,58 +196,27 @@ class TeacherService {
         for (final doc in snapshot.docs) {
           final data = doc.data();
 
-          if (AppHelpers.isDeleted(data)) {
+          if (AppHelpers.isDeletedOrInactive(data)) {
             continue;
           }
 
           final assignment = AssignmentModel.fromDoc(doc);
-
-          final docTeacherNo = AppHelpers.onlyDigits(
-            AppHelpers.getText(
-              data,
-              [
-                'teacherNo',
-                'TeacherNo',
-                'teacherNumber',
-                'TeacherNumber',
-                'number',
-                'Number',
-              ],
-            ),
-          );
-
-          final docTeacherNameKey = AppHelpers.normalizeKey(
-            AppHelpers.getText(
-              data,
-              [
-                'teacherName',
-                'TeacherName',
-                'teacher',
-                'Teacher',
-              ],
-            ),
-          );
-
-          final docBranchKey = AppHelpers.normalizeKey(
-            AppHelpers.getText(
-              data,
-              [
-                'branch',
-                'Branch',
-                'teacherBranch',
-                'TeacherBranch',
-              ],
-            ),
-          );
 
           final assignmentLessonKey = AppHelpers.normalizeKey(
             '${assignment.lessonName}_${assignment.className}',
           );
 
           final sameTeacher =
-              (teacherNo.isNotEmpty && docTeacherNo == teacherNo) ||
-              (teacherNameKey.isNotEmpty && docTeacherNameKey == teacherNameKey) ||
-              (branchKey.isNotEmpty && docBranchKey == branchKey) ||
+              _assignmentBelongsToTeacher(
+                assignment: assignment,
+                data: data,
+                teacher: teacher,
+                teacherNo: teacherNo,
+                teacherNameKey: teacherNameKey,
+                branchKey: branchKey,
+              ) ||
+              (assignment.lessonId.isNotEmpty &&
+                  lessonIds.contains(assignment.lessonId)) ||
               lessonKeys.contains(assignmentLessonKey);
 
           if (!sameTeacher) {
@@ -288,10 +254,7 @@ class TeacherService {
     required List<LessonModel> lessons,
     required List<AssignmentModel> assignments,
   }) async {
-    final collections = [
-      'homework_submissions',
-      'submissions',
-    ];
+    final collections = ['homework_submissions', 'submissions'];
 
     final result = <SubmissionModel>[];
     final seen = <String>{};
@@ -301,6 +264,7 @@ class TeacherService {
     final branchKey = AppHelpers.normalizeKey(teacher.branch);
 
     final assignmentIds = assignments.map((x) => x.id).toSet();
+    final studentNamesByNo = await _loadStudentNamesByNumber();
 
     final assignmentKeys = assignments
         .map(
@@ -311,9 +275,7 @@ class TeacherService {
         .toSet();
 
     final lessonKeys = lessons
-        .map(
-          (x) => AppHelpers.normalizeKey('${x.name}_${x.className}'),
-        )
+        .map((x) => AppHelpers.normalizeKey('${x.name}_${x.className}'))
         .toSet();
 
     for (final collection in collections) {
@@ -321,50 +283,70 @@ class TeacherService {
         final snapshot = await _db.collection(collection).get();
 
         for (final doc in snapshot.docs) {
-          final data = doc.data();
+          final data = Map<String, dynamic>.from(doc.data());
 
-          if (AppHelpers.isDeleted(data)) {
+          if (AppHelpers.isDeletedOrInactive(data)) {
             continue;
           }
 
-          final submission = SubmissionModel.fromDoc(doc);
+          final studentNo = AppHelpers.onlyDigits(
+            AppHelpers.getText(data, [
+              'studentNo',
+              'StudentNo',
+              'studentNumber',
+              'StudentNumber',
+              'schoolNo',
+              'SchoolNo',
+              'number',
+              'Number',
+            ]),
+          );
+
+          final studentName = AppHelpers.getText(data, [
+            'studentName',
+            'StudentName',
+            'name',
+            'Name',
+          ]);
+
+          if (studentName.trim().isEmpty && studentNo.isNotEmpty) {
+            final knownName = studentNamesByNo[studentNo];
+
+            if (knownName != null && knownName.trim().isNotEmpty) {
+              data['studentName'] = knownName;
+              data['StudentName'] = knownName;
+            }
+          }
+
+          final submission = SubmissionModel.fromData(doc.id, data);
 
           final docTeacherNo = AppHelpers.onlyDigits(
-            AppHelpers.getText(
-              data,
-              [
-                'teacherNo',
-                'TeacherNo',
-                'teacherNumber',
-                'TeacherNumber',
-                'number',
-                'Number',
-              ],
-            ),
+            AppHelpers.getText(data, [
+              'teacherNo',
+              'TeacherNo',
+              'teacherNumber',
+              'TeacherNumber',
+              'number',
+              'Number',
+            ]),
           );
 
           final docTeacherNameKey = AppHelpers.normalizeKey(
-            AppHelpers.getText(
-              data,
-              [
-                'teacherName',
-                'TeacherName',
-                'teacher',
-                'Teacher',
-              ],
-            ),
+            AppHelpers.getText(data, [
+              'teacherName',
+              'TeacherName',
+              'teacher',
+              'Teacher',
+            ]),
           );
 
           final docBranchKey = AppHelpers.normalizeKey(
-            AppHelpers.getText(
-              data,
-              [
-                'branch',
-                'Branch',
-                'teacherBranch',
-                'TeacherBranch',
-              ],
-            ),
+            AppHelpers.getText(data, [
+              'branch',
+              'Branch',
+              'teacherBranch',
+              'TeacherBranch',
+            ]),
           );
 
           final submissionAssignmentKey = AppHelpers.normalizeKey(
@@ -381,7 +363,8 @@ class TeacherService {
               assignmentKeys.contains(submissionAssignmentKey) ||
               lessonKeys.contains(submissionLessonKey) ||
               (teacherNo.isNotEmpty && docTeacherNo == teacherNo) ||
-              (teacherNameKey.isNotEmpty && docTeacherNameKey == teacherNameKey) ||
+              (teacherNameKey.isNotEmpty &&
+                  docTeacherNameKey == teacherNameKey) ||
               (branchKey.isNotEmpty && docBranchKey == branchKey);
 
           if (!sameTeacher) {
@@ -426,6 +409,148 @@ class TeacherService {
     return result;
   }
 
+  bool _lessonBelongsToTeacher({
+    required LessonModel lesson,
+    required Map<String, dynamic> data,
+    required AppUser teacher,
+    required String teacherNo,
+    required String teacherNameKey,
+    required String branchKey,
+  }) {
+    final docTeacherId = AppHelpers.getText(data, [
+      'teacherId',
+      'TeacherId',
+    ]).trim();
+    final docTeacherNo = AppHelpers.onlyDigits(
+      AppHelpers.getText(data, ['teacherNo', 'TeacherNo']),
+    );
+    final docTeacherNumber = AppHelpers.onlyDigits(
+      AppHelpers.getText(data, ['teacherNumber', 'TeacherNumber']),
+    );
+    final docNumber = AppHelpers.onlyDigits(
+      AppHelpers.getText(data, ['number', 'Number']),
+    );
+    final docTeacherNameKey = AppHelpers.normalizeKey(
+      AppHelpers.getText(data, ['teacherName', 'TeacherName']),
+    );
+
+    final hasTeacherIdentity =
+        docTeacherId.isNotEmpty ||
+        docTeacherNo.isNotEmpty ||
+        docTeacherNumber.isNotEmpty ||
+        docTeacherNameKey.isNotEmpty;
+
+    final identityMatches =
+        (docTeacherId.isNotEmpty && docTeacherId == teacher.id) ||
+        (teacherNo.isNotEmpty && docTeacherNo == teacherNo) ||
+        (teacherNo.isNotEmpty && docTeacherNumber == teacherNo) ||
+        (hasTeacherIdentity &&
+            teacherNo.isNotEmpty &&
+            docNumber == teacherNo) ||
+        (teacherNameKey.isNotEmpty && docTeacherNameKey == teacherNameKey);
+
+    if (hasTeacherIdentity) {
+      return identityMatches;
+    }
+
+    final docBranchKey = AppHelpers.normalizeKey(
+      AppHelpers.getText(data, [
+        'branch',
+        'Branch',
+        'teacherBranch',
+        'TeacherBranch',
+      ], defaultValue: lesson.branch),
+    );
+
+    return branchKey.isNotEmpty && docBranchKey == branchKey;
+  }
+
+  bool _assignmentBelongsToTeacher({
+    required AssignmentModel assignment,
+    required Map<String, dynamic> data,
+    required AppUser teacher,
+    required String teacherNo,
+    required String teacherNameKey,
+    required String branchKey,
+  }) {
+    final docTeacherId = assignment.teacherId.isNotEmpty
+        ? assignment.teacherId
+        : AppHelpers.getText(data, ['teacherId', 'TeacherId']).trim();
+    final docTeacherNo = AppHelpers.onlyDigits(assignment.teacherNo);
+    final docTeacherNumber = AppHelpers.onlyDigits(assignment.teacherNumber);
+    final docTeacherNameKey = AppHelpers.normalizeKey(assignment.teacherName);
+
+    final hasTeacherIdentity =
+        docTeacherId.isNotEmpty ||
+        docTeacherNo.isNotEmpty ||
+        docTeacherNumber.isNotEmpty ||
+        docTeacherNameKey.isNotEmpty;
+
+    final identityMatches =
+        (docTeacherId.isNotEmpty && docTeacherId == teacher.id) ||
+        (teacherNo.isNotEmpty && docTeacherNo == teacherNo) ||
+        (teacherNo.isNotEmpty && docTeacherNumber == teacherNo) ||
+        (teacherNameKey.isNotEmpty && docTeacherNameKey == teacherNameKey);
+
+    if (hasTeacherIdentity) {
+      return identityMatches;
+    }
+
+    final docBranchKey = AppHelpers.normalizeKey(assignment.branch);
+
+    return branchKey.isNotEmpty && docBranchKey == branchKey;
+  }
+
+  Future<Map<String, String>> _loadStudentNamesByNumber() async {
+    final result = <String, String>{};
+
+    try {
+      final snapshot = await _db.collection('users').get();
+
+      for (final doc in snapshot.docs) {
+        final data = doc.data();
+
+        if (AppHelpers.isDeleted(data)) {
+          continue;
+        }
+
+        final role = AppHelpers.normalizeKey(
+          AppHelpers.getText(data, ['role', 'Role', 'userRole', 'UserRole']),
+        );
+
+        if (role != 'ogrenci') {
+          continue;
+        }
+
+        final number = AppHelpers.onlyDigits(
+          AppHelpers.getText(data, [
+            'number',
+            'Number',
+            'schoolNo',
+            'SchoolNo',
+            'studentNo',
+            'StudentNo',
+          ]),
+        );
+
+        final name = AppHelpers.getText(data, [
+          'name',
+          'Name',
+          'fullName',
+          'FullName',
+          'userName',
+          'UserName',
+        ]);
+
+        if (number.isNotEmpty && name.trim().isNotEmpty) {
+          result[number] = name.trim();
+        }
+      }
+    } catch (_) {}
+
+    return result;
+  }
+
   Future<void> createAssignment({
     required AppUser teacher,
     required LessonModel lesson,
@@ -434,64 +559,113 @@ class TeacherService {
     required DateTime? dueDate,
     required String fileType,
   }) async {
+    await createHomeworkForLessonAssignments(
+      teacher: teacher,
+      selectedLessonIds: [lesson.id],
+      title: title,
+      description: description,
+      dueDate: dueDate,
+      fileType: fileType,
+    );
+  }
+
+  Future<void> createHomeworkForLessonAssignments({
+    required AppUser teacher,
+    required List<String> selectedLessonIds,
+    required String title,
+    required String description,
+    required DateTime? dueDate,
+    required String fileType,
+  }) async {
     final cleanTitle = title.trim();
     final cleanDescription = description.trim();
-    final cleanFileType = fileType.trim().isEmpty ? 'Metin / Link' : fileType.trim();
+    final cleanFileType = fileType.trim().isEmpty
+        ? 'Metin / Link'
+        : fileType.trim();
 
     if (cleanTitle.isEmpty) {
       throw Exception('Ödev başlığı boş bırakılamaz.');
     }
 
-    final now = Timestamp.now();
+    final cleanLessonIds = selectedLessonIds
+        .map((x) => x.trim())
+        .where((x) => x.isNotEmpty)
+        .toSet()
+        .toList();
 
-    final data = <String, dynamic>{
-      'title': cleanTitle,
-      'name': cleanTitle,
-      'homeworkTitle': cleanTitle,
-      'assignmentTitle': cleanTitle,
-      'description': cleanDescription,
-      'content': cleanDescription,
-      'text': cleanDescription,
-      'lessonId': lesson.id,
-      'lessonName': lesson.name,
-      'lesson': lesson.name,
-      'courseName': lesson.name,
-      'course': lesson.name,
-      'className': lesson.className,
-      'class': lesson.className,
-      'targetClass': lesson.className,
-      'teacherName': teacher.name,
-      'teacher': teacher.name,
-      'teacherNo': AppHelpers.onlyDigits(teacher.number),
-      'teacherNumber': AppHelpers.onlyDigits(teacher.number),
-      'branch': teacher.branch.trim().isEmpty ? lesson.branch : teacher.branch,
-      'teacherBranch': teacher.branch.trim().isEmpty ? lesson.branch : teacher.branch,
-      'fileType': cleanFileType,
-      'type': cleanFileType,
-      'submissionType': cleanFileType,
-      'status': 'Aktif',
-      'createdAt': now,
-      'updatedAt': now,
-      'isDeleted': false,
-      'isActive': true,
-    };
-
-    if (dueDate != null) {
-      final normalizedDue = Timestamp.fromDate(dueDate);
-      data['dueDate'] = normalizedDue;
-      data['deadline'] = normalizedDue;
-      data['endDate'] = normalizedDue;
+    if (cleanLessonIds.isEmpty) {
+      throw Exception('En az bir ders ataması seçmelisiniz.');
     }
 
-    final ref = await _db.collection('homeworks').add(data);
+    final now = Timestamp.now();
 
-    data['id'] = ref.id;
-    data['Id'] = ref.id;
+    for (final lessonId in cleanLessonIds) {
+      final lessonDoc = await _db.collection('lessons').doc(lessonId).get();
 
-    await _db.collection('assignments').doc(ref.id).set(
-          data,
-          SetOptions(merge: true),
-        );
+      if (!lessonDoc.exists) {
+        continue;
+      }
+
+      final lessonData = lessonDoc.data() ?? <String, dynamic>{};
+
+      if (AppHelpers.isDeletedOrInactive(lessonData)) {
+        continue;
+      }
+
+      final lesson = LessonModel.fromDoc(lessonDoc);
+      final teacherNo = AppHelpers.onlyDigits(teacher.number);
+      final teacherNameKey = AppHelpers.normalizeKey(teacher.name);
+      final branchKey = AppHelpers.normalizeKey(teacher.branch);
+
+      if (!_lessonBelongsToTeacher(
+        lesson: lesson,
+        data: lessonData,
+        teacher: teacher,
+        teacherNo: teacherNo,
+        teacherNameKey: teacherNameKey,
+        branchKey: branchKey,
+      )) {
+        continue;
+      }
+
+      final branch = teacher.branch.trim().isEmpty
+          ? lesson.displayBranch
+          : teacher.branch.trim();
+      final ref = _db.collection('homeworks').doc();
+      final normalizedDue = dueDate == null
+          ? null
+          : Timestamp.fromDate(dueDate);
+
+      final data = <String, dynamic>{
+        'id': ref.id,
+        'Id': ref.id,
+        'title': cleanTitle,
+        'description': cleanDescription,
+        'lessonId': lesson.id,
+        'lessonName': lesson.displayLessonName,
+        'className': lesson.displayClassName,
+        'teacherId': teacher.id,
+        'teacherNo': teacherNo,
+        'teacherNumber': teacherNo,
+        'teacherName': teacher.name,
+        'teacherBranch': branch,
+        'branch': branch,
+        'fileType': cleanFileType,
+        'dueDate': normalizedDue,
+        'deadline': normalizedDue,
+        'createdAt': now,
+        'updatedAt': now,
+        'status': 'Aktif',
+        'isDeleted': false,
+        'isActive': true,
+      };
+
+      await ref.set(data, SetOptions(merge: true));
+      await _db
+          .collection('assignments')
+          .doc(ref.id)
+          .set(data, SetOptions(merge: true));
+    }
   }
 
   Future<void> evaluateSubmission({
@@ -503,7 +677,9 @@ class TeacherService {
     final cleanFeedback = feedback.trim();
 
     if (cleanScore.isEmpty && cleanFeedback.isEmpty) {
-      throw Exception('Not veya geri dönüş alanlarından en az biri doldurulmalı.');
+      throw Exception(
+        'Not veya geri dönüş alanlarından en az biri doldurulmalı.',
+      );
     }
 
     final update = <String, dynamic>{
@@ -529,10 +705,7 @@ class TeacherService {
       'UpdatedAt': Timestamp.now(),
     };
 
-    final collections = [
-      'homework_submissions',
-      'submissions',
-    ];
+    final collections = ['homework_submissions', 'submissions'];
 
     for (final collection in collections) {
       await _updateSubmissionInCollection(
@@ -549,13 +722,13 @@ class TeacherService {
     required Map<String, dynamic> update,
   }) async {
     try {
-      final directDoc = await _db.collection(collection).doc(submission.id).get();
+      final directDoc = await _db
+          .collection(collection)
+          .doc(submission.id)
+          .get();
 
       if (directDoc.exists) {
-        await directDoc.reference.set(
-          update,
-          SetOptions(merge: true),
-        );
+        await directDoc.reference.set(update, SetOptions(merge: true));
 
         return;
       }
@@ -573,13 +746,15 @@ class TeacherService {
 
         final candidate = SubmissionModel.fromDoc(doc);
 
-        final sameByAssignmentId = candidate.assignmentId.trim().isNotEmpty &&
+        final sameByAssignmentId =
+            candidate.assignmentId.trim().isNotEmpty &&
             submission.assignmentId.trim().isNotEmpty &&
             candidate.assignmentId == submission.assignmentId &&
             AppHelpers.onlyDigits(candidate.studentNo) ==
                 AppHelpers.onlyDigits(submission.studentNo);
 
-        final sameByContent = AppHelpers.normalizeKey(
+        final sameByContent =
+            AppHelpers.normalizeKey(
               '${candidate.title}_${candidate.lessonName}_${candidate.className}_${candidate.studentNo}',
             ) ==
             AppHelpers.normalizeKey(
@@ -587,10 +762,7 @@ class TeacherService {
             );
 
         if (sameByAssignmentId || sameByContent) {
-          await doc.reference.set(
-            update,
-            SetOptions(merge: true),
-          );
+          await doc.reference.set(update, SetOptions(merge: true));
         }
       }
     } catch (_) {}

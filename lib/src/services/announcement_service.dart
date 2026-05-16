@@ -19,44 +19,34 @@ class AnnouncementService {
           continue;
         }
 
-        final title = AppHelpers.getText(
-          data,
-          [
-            'title',
-            'Title',
-            'name',
-            'Name',
-          ],
-        );
+        final title = AppHelpers.getText(data, [
+          'title',
+          'Title',
+          'name',
+          'Name',
+        ]);
 
-        final content = AppHelpers.getText(
-          data,
-          [
-            'content',
-            'Content',
-            'message',
-            'Message',
-            'description',
-            'Description',
-          ],
-        );
+        final content = AppHelpers.getText(data, [
+          'content',
+          'Content',
+          'message',
+          'Message',
+          'description',
+          'Description',
+        ]);
 
         if (title.trim().isEmpty && content.trim().isEmpty) {
           continue;
         }
 
-        final target = AppHelpers.getText(
-          data,
-          [
-            'target',
-            'Target',
-            'targetRole',
-            'TargetRole',
-            'audience',
-            'Audience',
-          ],
-          defaultValue: 'Tüm Okul',
-        );
+        final target = AppHelpers.getText(data, [
+          'target',
+          'Target',
+          'targetRole',
+          'TargetRole',
+          'audience',
+          'Audience',
+        ], defaultValue: 'Tüm Okul');
 
         if (!_isForRole(target: target, roleKey: roleKey)) {
           continue;
@@ -76,10 +66,7 @@ class AnnouncementService {
     });
   }
 
-  bool _isForRole({
-    required String target,
-    required String roleKey,
-  }) {
+  bool _isForRole({required String target, required String roleKey}) {
     final targetKey = AppHelpers.normalizeKey(target);
 
     if (targetKey.isEmpty) {

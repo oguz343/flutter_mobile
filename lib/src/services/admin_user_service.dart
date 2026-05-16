@@ -80,7 +80,7 @@ class AdminUserService {
     final cleanRole = AppHelpers.normalizeRoleForSave(role);
     final cleanName = name.trim();
     final cleanNumber = AppHelpers.onlyDigits(number);
-    final cleanPassword = password.trim();
+    final cleanActivationCode = password.trim();
     final cleanTc = AppHelpers.onlyDigits(tc);
     final cleanPhone = phone.trim();
     final cleanClassName = AppHelpers.normalizeClassName(className);
@@ -99,8 +99,8 @@ class AdminUserService {
       throw const AdminUserException('Numara boş bırakılamaz.');
     }
 
-    if (cleanPassword.isEmpty) {
-      throw const AdminUserException('Geçici şifre boş bırakılamaz.');
+    if (cleanActivationCode.isEmpty) {
+      throw const AdminUserException('Aktivasyon kodu boş bırakılamaz.');
     }
 
     if (cleanTc.isNotEmpty && cleanTc.length != 11) {
@@ -143,10 +143,10 @@ class AdminUserService {
       'Number': cleanNumber,
       'schoolNo': cleanNumber,
       'SchoolNo': cleanNumber,
-      'password': cleanPassword,
-      'Password': cleanPassword,
-      'activationCode': cleanPassword,
-      'ActivationCode': cleanPassword,
+      'password': '',
+      'Password': '',
+      'activationCode': cleanActivationCode,
+      'ActivationCode': cleanActivationCode,
       'mustChangePassword': true,
       'MustChangePassword': true,
       'tc': cleanTc,
@@ -208,10 +208,7 @@ class AdminUserService {
       throw const AdminUserException('TC kimlik numarası 11 hane olmalı.');
     }
 
-    final exists = await numberExists(
-      cleanNumber,
-      exceptUserId: user.id,
-    );
+    final exists = await numberExists(cleanNumber, exceptUserId: user.id);
 
     if (exists) {
       throw const AdminUserException(
@@ -219,57 +216,48 @@ class AdminUserService {
       );
     }
 
-    await _db.collection('users').doc(user.id).set(
-      {
-        'role': cleanRole,
-        'Role': cleanRole,
-        'name': cleanName,
-        'Name': cleanName,
-        'number': cleanNumber,
-        'Number': cleanNumber,
-        'schoolNo': cleanNumber,
-        'SchoolNo': cleanNumber,
-        'tc': cleanTc,
-        'TC': cleanTc,
-        'phone': cleanPhone,
-        'Phone': cleanPhone,
-        'className': cleanClassName,
-        'ClassName': cleanClassName,
-        'class': cleanClassName,
-        'Class': cleanClassName,
-        'branch': cleanBranch,
-        'Branch': cleanBranch,
-        'teacherBranch': cleanBranch,
-        'TeacherBranch': cleanBranch,
-        'linkedStudentNo': cleanLinkedStudentNo,
-        'LinkedStudentNo': cleanLinkedStudentNo,
-        'updatedAt': Timestamp.now(),
-        'UpdatedAt': Timestamp.now(),
-      },
-      SetOptions(merge: true),
-    );
+    await _db.collection('users').doc(user.id).set({
+      'role': cleanRole,
+      'Role': cleanRole,
+      'name': cleanName,
+      'Name': cleanName,
+      'number': cleanNumber,
+      'Number': cleanNumber,
+      'schoolNo': cleanNumber,
+      'SchoolNo': cleanNumber,
+      'tc': cleanTc,
+      'TC': cleanTc,
+      'phone': cleanPhone,
+      'Phone': cleanPhone,
+      'className': cleanClassName,
+      'ClassName': cleanClassName,
+      'class': cleanClassName,
+      'Class': cleanClassName,
+      'branch': cleanBranch,
+      'Branch': cleanBranch,
+      'teacherBranch': cleanBranch,
+      'TeacherBranch': cleanBranch,
+      'linkedStudentNo': cleanLinkedStudentNo,
+      'LinkedStudentNo': cleanLinkedStudentNo,
+      'updatedAt': Timestamp.now(),
+      'UpdatedAt': Timestamp.now(),
+    }, SetOptions(merge: true));
   }
 
   Future<void> softDeleteUser(AppUser user) async {
-    await _db.collection('users').doc(user.id).set(
-      {
-        'isDeleted': true,
-        'IsDeleted': true,
-        'isActive': false,
-        'IsActive': false,
-        'deletedAt': Timestamp.now(),
-        'DeletedAt': Timestamp.now(),
-        'updatedAt': Timestamp.now(),
-        'UpdatedAt': Timestamp.now(),
-      },
-      SetOptions(merge: true),
-    );
+    await _db.collection('users').doc(user.id).set({
+      'isDeleted': true,
+      'IsDeleted': true,
+      'isActive': false,
+      'IsActive': false,
+      'deletedAt': Timestamp.now(),
+      'DeletedAt': Timestamp.now(),
+      'updatedAt': Timestamp.now(),
+      'UpdatedAt': Timestamp.now(),
+    }, SetOptions(merge: true));
   }
 
-  Future<bool> numberExists(
-    String number, {
-    String? exceptUserId,
-  }) async {
+  Future<bool> numberExists(String number, {String? exceptUserId}) async {
     final cleanNumber = AppHelpers.onlyDigits(number);
 
     if (cleanNumber.isEmpty) {
@@ -290,21 +278,18 @@ class AdminUserService {
       }
 
       final currentNumber = AppHelpers.onlyDigits(
-        AppHelpers.getText(
-          data,
-          [
-            'number',
-            'Number',
-            'schoolNo',
-            'SchoolNo',
-            'studentNo',
-            'StudentNo',
-            'teacherNo',
-            'TeacherNo',
-            'adminNo',
-            'AdminNo',
-          ],
-        ),
+        AppHelpers.getText(data, [
+          'number',
+          'Number',
+          'schoolNo',
+          'SchoolNo',
+          'studentNo',
+          'StudentNo',
+          'teacherNo',
+          'TeacherNo',
+          'adminNo',
+          'AdminNo',
+        ]),
       );
 
       if (currentNumber == cleanNumber) {
@@ -324,26 +309,21 @@ class AdminUserService {
     );
 
     if (user == null) {
-      throw const AdminUserException(
-        'Bu talebe ait kullanıcı bulunamadı.',
-      );
+      throw const AdminUserException('Bu talebe ait kullanıcı bulunamadı.');
     }
 
     final now = Timestamp.now();
 
-    await _db.collection('users').doc(user.id).set(
-      {
-        'password': newPassword,
-        'Password': newPassword,
-        'activationCode': newPassword,
-        'ActivationCode': newPassword,
-        'mustChangePassword': true,
-        'MustChangePassword': true,
-        'updatedAt': now,
-        'UpdatedAt': now,
-      },
-      SetOptions(merge: true),
-    );
+    await _db.collection('users').doc(user.id).set({
+      'password': newPassword,
+      'Password': newPassword,
+      'activationCode': newPassword,
+      'ActivationCode': newPassword,
+      'mustChangePassword': true,
+      'MustChangePassword': true,
+      'updatedAt': now,
+      'UpdatedAt': now,
+    }, SetOptions(merge: true));
 
     await _updatePasswordRequestStatus(
       request: request,
@@ -363,10 +343,7 @@ class AdminUserService {
     await _updatePasswordRequestStatus(
       request: request,
       status: 'Reddedildi',
-      extra: {
-        'rejectedAt': Timestamp.now(),
-        'RejectedAt': Timestamp.now(),
-      },
+      extra: {'rejectedAt': Timestamp.now(), 'RejectedAt': Timestamp.now()},
     );
   }
 
@@ -414,20 +391,17 @@ class AdminUserService {
       ...extra,
     };
 
-    final collections = [
-      'passwordRequests',
-      'password_requests',
-    ];
+    final collections = ['passwordRequests', 'password_requests'];
 
     for (final collection in collections) {
       try {
-        final directDoc = await _db.collection(collection).doc(request.id).get();
+        final directDoc = await _db
+            .collection(collection)
+            .doc(request.id)
+            .get();
 
         if (directDoc.exists) {
-          await directDoc.reference.set(
-            update,
-            SetOptions(merge: true),
-          );
+          await directDoc.reference.set(update, SetOptions(merge: true));
         }
       } catch (_) {}
 
@@ -438,35 +412,23 @@ class AdminUserService {
           final data = doc.data();
 
           final role = AppHelpers.normalizeKey(
-            AppHelpers.getText(
-              data,
-              [
-                'role',
-                'Role',
-              ],
-            ),
+            AppHelpers.getText(data, ['role', 'Role']),
           );
 
           final number = AppHelpers.onlyDigits(
-            AppHelpers.getText(
-              data,
-              [
-                'number',
-                'Number',
-                'schoolNo',
-                'SchoolNo',
-                'studentNo',
-                'StudentNo',
-              ],
-            ),
+            AppHelpers.getText(data, [
+              'number',
+              'Number',
+              'schoolNo',
+              'SchoolNo',
+              'studentNo',
+              'StudentNo',
+            ]),
           );
 
           if (role == AppHelpers.normalizeKey(request.role) &&
               number == AppHelpers.onlyDigits(request.number)) {
-            await doc.reference.set(
-              update,
-              SetOptions(merge: true),
-            );
+            await doc.reference.set(update, SetOptions(merge: true));
           }
         }
       } catch (_) {}
@@ -474,6 +436,10 @@ class AdminUserService {
   }
 
   String _generateTempPassword() {
+    return generateActivationCode();
+  }
+
+  String generateActivationCode() {
     final random = Random();
     final number = 100000 + random.nextInt(900000);
 

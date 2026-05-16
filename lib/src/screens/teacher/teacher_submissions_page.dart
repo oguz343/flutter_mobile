@@ -10,10 +10,7 @@ import '../../widgets/smart_link_text.dart';
 class TeacherSubmissionsPage extends StatelessWidget {
   final Color accent;
 
-  const TeacherSubmissionsPage({
-    super.key,
-    required this.accent,
-  });
+  const TeacherSubmissionsPage({super.key, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -33,9 +30,7 @@ class TeacherSubmissionsPage extends StatelessWidget {
       stream: service.watchTeacherDashboard(teacher),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
@@ -46,7 +41,8 @@ class TeacherSubmissionsPage extends StatelessWidget {
           );
         }
 
-        final data = snapshot.data ??
+        final data =
+            snapshot.data ??
             const TeacherDashboardBundle(
               lessons: [],
               assignments: [],
@@ -109,10 +105,7 @@ class _Hero extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            accent,
-            AppTheme.cyan,
-          ],
+          colors: [accent, AppTheme.cyan],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -151,7 +144,7 @@ class _Hero extends StatelessWidget {
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
                     fontSize: 25,
-                    letterSpacing: -0.7,
+                    letterSpacing: 0,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -176,15 +169,17 @@ class _SubmissionCard extends StatelessWidget {
   final SubmissionModel submission;
   final Color accent;
 
-  const _SubmissionCard({
-    required this.submission,
-    required this.accent,
-  });
+  const _SubmissionCard({required this.submission, required this.accent});
 
   @override
   Widget build(BuildContext context) {
     final evaluated = submission.isEvaluated;
     final color = evaluated ? const Color(0xFF10B981) : const Color(0xFFF59E0B);
+    final studentName =
+        submission.studentName.trim().isEmpty ||
+            submission.studentName.trim() == '-'
+        ? 'Öğrenci'
+        : submission.studentName.trim();
 
     return Container(
       width: double.infinity,
@@ -192,9 +187,7 @@ class _SubmissionCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
@@ -225,7 +218,7 @@ class _SubmissionCard extends StatelessWidget {
                         color: AppTheme.dark,
                         fontWeight: FontWeight.w900,
                         fontSize: 16,
-                        letterSpacing: -0.2,
+                        letterSpacing: 0,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -247,6 +240,52 @@ class _SubmissionCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(13),
+            decoration: BoxDecoration(
+              color: accent.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: accent.withValues(alpha: 0.16)),
+            ),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: accent.withValues(alpha: 0.16),
+                  child: Icon(Icons.person_rounded, color: accent, size: 20),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        studentName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppTheme.dark,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'No: ${submission.studentNo} • Sınıf: ${submission.className}',
+                        style: const TextStyle(
+                          color: AppTheme.muted,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -257,7 +296,8 @@ class _SubmissionCard extends StatelessWidget {
                 color: accent,
               ),
               _MiniChip(
-                text: 'Teslim: ${AppHelpers.formatDate(submission.submittedAt)}',
+                text:
+                    'Teslim: ${AppHelpers.formatDate(submission.submittedAt)}',
                 icon: Icons.schedule_rounded,
                 color: const Color(0xFFF59E0B),
               ),
@@ -270,9 +310,7 @@ class _SubmissionCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFFE2E8F0),
-              ),
+              border: Border.all(color: AppTheme.line),
             ),
             child: Text(
               submission.answer,
@@ -286,10 +324,7 @@ class _SubmissionCard extends StatelessWidget {
           ),
           if (submission.link.trim().isNotEmpty) ...[
             const SizedBox(height: 8),
-            SmartLinkText(
-              link: submission.link,
-              color: accent,
-            ),
+            SmartLinkText(link: submission.link, color: accent),
           ],
           if (submission.score.trim().isNotEmpty ||
               submission.feedback.trim().isNotEmpty) ...[
@@ -300,9 +335,7 @@ class _SubmissionCard extends StatelessWidget {
               decoration: BoxDecoration(
                 color: const Color(0xFFECFDF5),
                 borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: const Color(0xFFD1FAE5),
-                ),
+                border: Border.all(color: const Color(0xFFD1FAE5)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -343,10 +376,8 @@ class _SubmissionCard extends StatelessWidget {
                   isScrollControlled: true,
                   useSafeArea: true,
                   backgroundColor: Colors.transparent,
-                  builder: (_) => _EvaluateSheet(
-                    submission: submission,
-                    accent: accent,
-                  ),
+                  builder: (_) =>
+                      _EvaluateSheet(submission: submission, accent: accent),
                 );
               },
               icon: const Icon(Icons.grade_rounded),
@@ -358,9 +389,7 @@ class _SubmissionCard extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
                 ),
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                ),
+                textStyle: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ),
           ),
@@ -374,10 +403,7 @@ class _EvaluateSheet extends StatefulWidget {
   final SubmissionModel submission;
   final Color accent;
 
-  const _EvaluateSheet({
-    required this.submission,
-    required this.accent,
-  });
+  const _EvaluateSheet({required this.submission, required this.accent});
 
   @override
   State<_EvaluateSheet> createState() => _EvaluateSheetState();
@@ -395,8 +421,9 @@ class _EvaluateSheetState extends State<_EvaluateSheet> {
     super.initState();
 
     _scoreController = TextEditingController(text: widget.submission.score);
-    _feedbackController =
-        TextEditingController(text: widget.submission.feedback);
+    _feedbackController = TextEditingController(
+      text: widget.submission.feedback,
+    );
   }
 
   @override
@@ -414,7 +441,8 @@ class _EvaluateSheetState extends State<_EvaluateSheet> {
 
     if (score.isEmpty && feedback.isEmpty) {
       setState(
-        () => _error = 'Not veya geri dönüş alanlarından en az biri dolu olmalı.',
+        () =>
+            _error = 'Not veya geri dönüş alanlarından en az biri dolu olmalı.',
       );
       return;
     }
@@ -437,11 +465,9 @@ class _EvaluateSheetState extends State<_EvaluateSheet> {
 
       Navigator.of(context).pop();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Teslim değerlendirildi.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Teslim değerlendirildi.')));
     } catch (e) {
       setState(() => _error = e.toString().replaceAll('Exception:', '').trim());
     } finally {
@@ -462,9 +488,7 @@ class _EvaluateSheetState extends State<_EvaluateSheet> {
         padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(34),
-          ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(34)),
         ),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -476,7 +500,7 @@ class _EvaluateSheetState extends State<_EvaluateSheet> {
                 width: 46,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
+                  color: AppTheme.line,
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -490,10 +514,7 @@ class _EvaluateSheetState extends State<_EvaluateSheet> {
                       color: widget.accent.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(19),
                     ),
-                    child: Icon(
-                      Icons.grade_rounded,
-                      color: widget.accent,
-                    ),
+                    child: Icon(Icons.grade_rounded, color: widget.accent),
                   ),
                   const SizedBox(width: 13),
                   Expanded(
@@ -503,7 +524,7 @@ class _EvaluateSheetState extends State<_EvaluateSheet> {
                         color: AppTheme.dark,
                         fontWeight: FontWeight.w900,
                         fontSize: 20,
-                        letterSpacing: -0.5,
+                        letterSpacing: 0,
                       ),
                     ),
                   ),
@@ -575,9 +596,7 @@ class _EvaluateSheetState extends State<_EvaluateSheet> {
                         )
                       : const Text(
                           'Kaydet',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.w900),
                         ),
                 ),
               ),
@@ -593,18 +612,12 @@ class _StatusPill extends StatelessWidget {
   final String text;
   final Color color;
 
-  const _StatusPill({
-    required this.text,
-    required this.color,
-  });
+  const _StatusPill({required this.text, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.11),
         borderRadius: BorderRadius.circular(999),
@@ -635,10 +648,7 @@ class _MiniChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 11,
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
@@ -646,11 +656,7 @@ class _MiniChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: color,
-            size: 15,
-          ),
+          Icon(icon, color: color, size: 15),
           const SizedBox(width: 6),
           Text(
             text,
@@ -688,17 +694,11 @@ class _MessageCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
         boxShadow: AppTheme.softShadow,
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
       ),
       child: Column(
         children: [
-          Icon(
-            Icons.info_rounded,
-            color: accent,
-            size: 42,
-          ),
+          Icon(Icons.info_rounded, color: accent, size: 42),
           const SizedBox(height: 12),
           Text(
             title,
@@ -726,10 +726,7 @@ class _MessageCard extends StatelessWidget {
     }
 
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: card,
-      ),
+      child: Padding(padding: const EdgeInsets.all(18), child: card),
     );
   }
 }

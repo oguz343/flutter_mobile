@@ -19,70 +19,53 @@ class AnnouncementModel {
     required this.createdAt,
   });
 
-  factory AnnouncementModel.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
+  factory AnnouncementModel.fromDoc(
+    DocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
     final data = doc.data() ?? <String, dynamic>{};
 
-    final title = AppHelpers.getText(
-      data,
-      [
-        'title',
-        'Title',
-        'name',
-        'Name',
-      ],
-      defaultValue: 'Duyuru',
-    );
+    final title = AppHelpers.getText(data, [
+      'title',
+      'Title',
+      'name',
+      'Name',
+    ], defaultValue: 'Duyuru');
 
-    final content = AppHelpers.getText(
-      data,
-      [
-        'content',
-        'Content',
-        'message',
-        'Message',
-        'description',
-        'Description',
-      ],
-      defaultValue: '-',
-    );
+    final content = AppHelpers.getText(data, [
+      'content',
+      'Content',
+      'message',
+      'Message',
+      'description',
+      'Description',
+    ], defaultValue: '-');
 
-    final target = AppHelpers.getText(
-      data,
-      [
-        'target',
-        'Target',
-        'targetRole',
-        'TargetRole',
-        'audience',
-        'Audience',
-      ],
-      defaultValue: 'Tüm Okul',
-    );
+    final target = AppHelpers.getText(data, [
+      'target',
+      'Target',
+      'targetRole',
+      'TargetRole',
+      'audience',
+      'Audience',
+    ], defaultValue: 'Tüm Okul');
 
-    final author = AppHelpers.getText(
-      data,
-      [
-        'author',
-        'Author',
-        'createdBy',
-        'CreatedBy',
-        'publisher',
-        'Publisher',
-      ],
-      defaultValue: 'Admin',
-    );
+    final author = AppHelpers.getText(data, [
+      'author',
+      'Author',
+      'createdBy',
+      'CreatedBy',
+      'publisher',
+      'Publisher',
+    ], defaultValue: 'Admin');
 
-    final createdAt = AppHelpers.getDate(
-      data,
-      [
-        'createdAt',
-        'CreatedAt',
-        'publishedAt',
-        'PublishedAt',
-        'date',
-        'Date',
-      ],
-    );
+    final createdAt = AppHelpers.getDate(data, [
+      'createdAt',
+      'CreatedAt',
+      'publishedAt',
+      'PublishedAt',
+      'date',
+      'Date',
+    ]);
 
     return AnnouncementModel(
       id: doc.id,

@@ -147,49 +147,41 @@ class AppHelpers {
       return true;
     }
 
-    final deleted = getBool(
-      data,
-      [
-        'isDeleted',
-        'IsDeleted',
-        'deleted',
-        'Deleted',
-        'isArchived',
-        'IsArchived',
-        'archived',
-        'Archived',
-        'isHidden',
-        'IsHidden',
-        'hidden',
-        'Hidden',
-        'isRemoved',
-        'IsRemoved',
-        'removed',
-        'Removed',
-      ],
-    );
+    final deleted = getBool(data, [
+      'isDeleted',
+      'IsDeleted',
+      'deleted',
+      'Deleted',
+      'isArchived',
+      'IsArchived',
+      'archived',
+      'Archived',
+      'isHidden',
+      'IsHidden',
+      'hidden',
+      'Hidden',
+      'isRemoved',
+      'IsRemoved',
+      'removed',
+      'Removed',
+    ]);
 
     if (deleted) {
       return true;
     }
 
-    if (hasAnyValue(
-      data,
-      [
-        'deletedAt',
-        'DeletedAt',
-        'removedAt',
-        'RemovedAt',
-        'archivedAt',
-        'ArchivedAt',
-      ],
-    )) {
+    if (hasAnyValue(data, [
+      'deletedAt',
+      'DeletedAt',
+      'removedAt',
+      'RemovedAt',
+      'archivedAt',
+      'ArchivedAt',
+    ])) {
       return true;
     }
 
-    final status = normalizeKey(
-      getText(data, ['status', 'Status']),
-    );
+    final status = normalizeKey(getText(data, ['status', 'Status']));
 
     return status == 'silindi' ||
         status == 'deleted' ||
@@ -202,10 +194,31 @@ class AppHelpers {
         status == 'canceled';
   }
 
-  static bool hasAnyValue(
-    Map<String, dynamic> data,
-    List<String> keys,
-  ) {
+  static bool isInactive(Map<String, dynamic> data) {
+    final hasActiveField = hasAnyValue(data, [
+      'isActive',
+      'IsActive',
+      'active',
+      'Active',
+    ]);
+
+    if (!hasActiveField) {
+      return false;
+    }
+
+    return !getBool(data, [
+      'isActive',
+      'IsActive',
+      'active',
+      'Active',
+    ], defaultValue: true);
+  }
+
+  static bool isDeletedOrInactive(Map<String, dynamic> data) {
+    return isDeleted(data) || isInactive(data);
+  }
+
+  static bool hasAnyValue(Map<String, dynamic> data, List<String> keys) {
     for (final key in keys) {
       final value = data[key];
 
@@ -335,6 +348,6 @@ class AppHelpers {
       return '${assignmentKey}_$studentKey';
     }
 
-    return normalizeKey('${title}_${studentNo}_${lessonName}_${className}');
+    return normalizeKey('${title}_${studentNo}_${lessonName}_$className');
   }
 }

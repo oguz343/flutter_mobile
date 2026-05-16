@@ -12,14 +12,12 @@ class ParentStudentBundle {
   final AppUser? student;
   final List<StudentAssignmentBundle> assignments;
 
-  const ParentStudentBundle({
-    required this.student,
-    required this.assignments,
-  });
+  const ParentStudentBundle({required this.student, required this.assignments});
 
   int get totalAssignments => assignments.length;
 
-  int get submittedCount => assignments.where((x) => x.submission != null).length;
+  int get submittedCount =>
+      assignments.where((x) => x.submission != null).length;
 
   int get evaluatedCount =>
       assignments.where((x) => x.submission?.isEvaluated ?? false).length;
@@ -53,10 +51,7 @@ class ParentService {
 
         if (!controller.isClosed) {
           controller.add(
-            ParentStudentBundle(
-              student: student,
-              assignments: assignments,
-            ),
+            ParentStudentBundle(student: student, assignments: assignments),
           );
         }
       } catch (e) {
@@ -74,14 +69,17 @@ class ParentService {
     }
 
     void listenTo(String collection) {
-      final sub = _db.collection(collection).snapshots().listen(
-        (_) => emit(),
-        onError: (error) {
-          if (!controller.isClosed) {
-            controller.addError(error);
-          }
-        },
-      );
+      final sub = _db
+          .collection(collection)
+          .snapshots()
+          .listen(
+            (_) => emit(),
+            onError: (error) {
+              if (!controller.isClosed) {
+                controller.addError(error);
+              }
+            },
+          );
 
       subscriptions.add(sub);
     }
@@ -113,7 +111,7 @@ class ParentService {
       for (final doc in snapshot.docs) {
         final data = doc.data();
 
-        if (AppHelpers.isDeleted(data)) {
+        if (AppHelpers.isDeletedOrInactive(data)) {
           continue;
         }
 
@@ -126,33 +124,27 @@ class ParentService {
         final studentNo = AppHelpers.onlyDigits(user.number);
 
         final studentLinkedParentNo = AppHelpers.onlyDigits(
-          AppHelpers.getText(
-            data,
-            [
-              'parentNo',
-              'ParentNo',
-              'parentNumber',
-              'ParentNumber',
-              'veliNo',
-              'VeliNo',
-              'linkedParentNo',
-              'LinkedParentNo',
-            ],
-          ),
+          AppHelpers.getText(data, [
+            'parentNo',
+            'ParentNo',
+            'parentNumber',
+            'ParentNumber',
+            'veliNo',
+            'VeliNo',
+            'linkedParentNo',
+            'LinkedParentNo',
+          ]),
         );
 
         final studentParentPhone = AppHelpers.onlyDigits(
-          AppHelpers.getText(
-            data,
-            [
-              'parentPhone',
-              'ParentPhone',
-              'veliTelefon',
-              'VeliTelefon',
-              'parentPhoneNumber',
-              'ParentPhoneNumber',
-            ],
-          ),
+          AppHelpers.getText(data, [
+            'parentPhone',
+            'ParentPhone',
+            'veliTelefon',
+            'VeliTelefon',
+            'parentPhoneNumber',
+            'ParentPhoneNumber',
+          ]),
         );
 
         final parentPhone = AppHelpers.onlyDigits(parent.phone);
@@ -166,7 +158,9 @@ class ParentService {
         final matchByPhone =
             parentPhone.isNotEmpty && studentParentPhone == parentPhone;
 
-        if (matchByParentLinkedStudent || matchByStudentParentNo || matchByPhone) {
+        if (matchByParentLinkedStudent ||
+            matchByStudentParentNo ||
+            matchByPhone) {
           return user;
         }
       }
@@ -191,19 +185,18 @@ class ParentService {
       );
 
       result.add(
-        StudentAssignmentBundle(
-          assignment: assignment,
-          submission: submission,
-        ),
+        StudentAssignmentBundle(assignment: assignment, submission: submission),
       );
     }
 
     result.sort((a, b) {
-      final ad = a.assignment.dueDate ??
+      final ad =
+          a.assignment.dueDate ??
           a.assignment.createdAt ??
           DateTime.fromMillisecondsSinceEpoch(0);
 
-      final bd = b.assignment.dueDate ??
+      final bd =
+          b.assignment.dueDate ??
           b.assignment.createdAt ??
           DateTime.fromMillisecondsSinceEpoch(0);
 
@@ -214,10 +207,7 @@ class ParentService {
   }
 
   Future<List<AssignmentModel>> _loadAssignments(AppUser student) async {
-    final collections = [
-      'homeworks',
-      'assignments',
-    ];
+    final collections = ['homeworks', 'assignments'];
 
     final result = <AssignmentModel>[];
     final seen = <String>{};
@@ -231,7 +221,7 @@ class ParentService {
         for (final doc in snapshot.docs) {
           final data = doc.data();
 
-          if (AppHelpers.isDeleted(data)) {
+          if (AppHelpers.isDeletedOrInactive(data)) {
             continue;
           }
 
@@ -269,10 +259,7 @@ class ParentService {
   }
 
   Future<List<SubmissionModel>> _loadSubmissions(AppUser student) async {
-    final collections = [
-      'homework_submissions',
-      'submissions',
-    ];
+    final collections = ['homework_submissions', 'submissions'];
 
     final result = <SubmissionModel>[];
     final seen = <String>{};
@@ -286,7 +273,7 @@ class ParentService {
         for (final doc in snapshot.docs) {
           final data = doc.data();
 
-          if (AppHelpers.isDeleted(data)) {
+          if (AppHelpers.isDeletedOrInactive(data)) {
             continue;
           }
 
@@ -346,7 +333,8 @@ class ParentService {
         '${assignment.title}_${assignment.lessonName}_${assignment.className}',
       );
 
-      final sameStudent = AppHelpers.onlyDigits(submission.studentNo) ==
+      final sameStudent =
+          AppHelpers.onlyDigits(submission.studentNo) ==
           AppHelpers.onlyDigits(student.number);
 
       if (sameStudent && submissionKey == assignmentKey) {

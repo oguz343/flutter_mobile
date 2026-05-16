@@ -9,10 +9,7 @@ import '../../widgets/smart_link_text.dart';
 class StudentAssignmentsPage extends StatelessWidget {
   final Color accent;
 
-  const StudentAssignmentsPage({
-    super.key,
-    required this.accent,
-  });
+  const StudentAssignmentsPage({super.key, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -32,9 +29,7 @@ class StudentAssignmentsPage extends StatelessWidget {
       stream: service.watchAssignmentsForStudent(user),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
@@ -70,10 +65,7 @@ class StudentAssignmentsPage extends StatelessWidget {
                 ...items.map(
                   (item) => Padding(
                     padding: const EdgeInsets.only(bottom: 13),
-                    child: _AssignmentCard(
-                      item: item,
-                      accent: accent,
-                    ),
+                    child: _AssignmentCard(item: item, accent: accent),
                   ),
                 ),
             ],
@@ -104,10 +96,7 @@ class _Hero extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            accent,
-            AppTheme.cyan,
-          ],
+          colors: [accent, AppTheme.cyan],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -146,7 +135,7 @@ class _Hero extends StatelessWidget {
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
                     fontSize: 25,
-                    letterSpacing: -0.7,
+                    letterSpacing: 0,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -172,10 +161,7 @@ class _AssignmentCard extends StatelessWidget {
   final StudentAssignmentBundle item;
   final Color accent;
 
-  const _AssignmentCard({
-    required this.item,
-    required this.accent,
-  });
+  const _AssignmentCard({required this.item, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -188,14 +174,14 @@ class _AssignmentCard extends StatelessWidget {
     final statusText = !submitted
         ? 'Teslim edilmedi'
         : evaluated
-            ? 'Değerlendirildi'
-            : 'Teslim edildi';
+        ? 'Değerlendirildi'
+        : 'Teslim edildi';
 
     final statusColor = !submitted
         ? const Color(0xFFEF4444)
         : evaluated
-            ? const Color(0xFF10B981)
-            : const Color(0xFFF59E0B);
+        ? const Color(0xFF10B981)
+        : const Color(0xFFF59E0B);
 
     return Container(
       width: double.infinity,
@@ -203,9 +189,7 @@ class _AssignmentCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
@@ -220,10 +204,7 @@ class _AssignmentCard extends StatelessWidget {
                   color: accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(19),
                 ),
-                child: Icon(
-                  Icons.menu_book_rounded,
-                  color: accent,
-                ),
+                child: Icon(Icons.menu_book_rounded, color: accent),
               ),
               const SizedBox(width: 13),
               Expanded(
@@ -236,7 +217,7 @@ class _AssignmentCard extends StatelessWidget {
                         color: AppTheme.dark,
                         fontWeight: FontWeight.w900,
                         fontSize: 16,
-                        letterSpacing: -0.2,
+                        letterSpacing: 0,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -251,10 +232,7 @@ class _AssignmentCard extends StatelessWidget {
                   ],
                 ),
               ),
-              _StatusPill(
-                text: statusText,
-                color: statusColor,
-              ),
+              _StatusPill(text: statusText, color: statusColor),
             ],
           ),
           const SizedBox(height: 14),
@@ -264,9 +242,7 @@ class _AssignmentCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFFE2E8F0),
-              ),
+              border: Border.all(color: AppTheme.line),
             ),
             child: Text(
               assignment.description,
@@ -321,18 +297,14 @@ class _AssignmentCard extends StatelessWidget {
                   isScrollControlled: true,
                   useSafeArea: true,
                   backgroundColor: Colors.transparent,
-                  builder: (_) => _SubmitSheet(
-                    assignment: assignment,
-                    accent: accent,
-                  ),
+                  builder: (_) =>
+                      _SubmitSheet(assignment: assignment, accent: accent),
                 );
               },
               icon: Icon(
                 submitted ? Icons.edit_document : Icons.upload_file_rounded,
               ),
-              label: Text(
-                submitted ? 'Teslimi Güncelle' : 'Ödev Teslim Et',
-              ),
+              label: Text(submitted ? 'Teslimi Güncelle' : 'Ödev Teslim Et'),
               style: ElevatedButton.styleFrom(
                 elevation: 0,
                 backgroundColor: accent,
@@ -340,9 +312,7 @@ class _AssignmentCard extends StatelessWidget {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(18),
                 ),
-                textStyle: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                ),
+                textStyle: const TextStyle(fontWeight: FontWeight.w900),
               ),
             ),
           ),
@@ -399,8 +369,9 @@ class _SubmissionInfo extends StatelessWidget {
           Text(
             evaluated ? 'Değerlendirme' : 'Teslim bilgisi',
             style: TextStyle(
-              color:
-                  evaluated ? const Color(0xFF047857) : const Color(0xFF92400E),
+              color: evaluated
+                  ? const Color(0xFF047857)
+                  : const Color(0xFF92400E),
               fontWeight: FontWeight.w900,
               fontSize: 13,
             ),
@@ -416,10 +387,7 @@ class _SubmissionInfo extends StatelessWidget {
           ),
           if (link.trim().isNotEmpty) ...[
             const SizedBox(height: 7),
-            SmartLinkText(
-              link: link,
-              color: const Color(0xFF2563EB),
-            ),
+            SmartLinkText(link: link, color: const Color(0xFF2563EB)),
           ],
           if (score.trim().isNotEmpty) ...[
             const SizedBox(height: 7),
@@ -468,10 +436,7 @@ class _SubmitSheet extends StatefulWidget {
   final AssignmentModel assignment;
   final Color accent;
 
-  const _SubmitSheet({
-    required this.assignment,
-    required this.accent,
-  });
+  const _SubmitSheet({required this.assignment, required this.accent});
 
   @override
   State<_SubmitSheet> createState() => _SubmitSheetState();
@@ -530,11 +495,9 @@ class _SubmitSheetState extends State<_SubmitSheet> {
 
       Navigator.of(context).pop();
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Ödev teslim edildi.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Ödev teslim edildi.')));
     } catch (e) {
       setState(() => _error = e.toString().replaceAll('Exception:', '').trim());
     } finally {
@@ -556,9 +519,7 @@ class _SubmitSheetState extends State<_SubmitSheet> {
         padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
         decoration: const BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(34),
-          ),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(34)),
         ),
         child: SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -570,7 +531,7 @@ class _SubmitSheetState extends State<_SubmitSheet> {
                 width: 46,
                 height: 5,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
+                  color: AppTheme.line,
                   borderRadius: BorderRadius.circular(999),
                 ),
               ),
@@ -600,7 +561,7 @@ class _SubmitSheetState extends State<_SubmitSheet> {
                             color: AppTheme.dark,
                             fontWeight: FontWeight.w900,
                             fontSize: 21,
-                            letterSpacing: -0.5,
+                            letterSpacing: 0,
                           ),
                         ),
                         const SizedBox(height: 4),
@@ -685,9 +646,7 @@ class _SubmitSheetState extends State<_SubmitSheet> {
                         )
                       : const Text(
                           'Teslimi Gönder',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                          ),
+                          style: TextStyle(fontWeight: FontWeight.w900),
                         ),
                 ),
               ),
@@ -703,18 +662,12 @@ class _StatusPill extends StatelessWidget {
   final String text;
   final Color color;
 
-  const _StatusPill({
-    required this.text,
-    required this.color,
-  });
+  const _StatusPill({required this.text, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.11),
         borderRadius: BorderRadius.circular(999),
@@ -745,10 +698,7 @@ class _MiniChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 11,
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
@@ -756,11 +706,7 @@ class _MiniChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: color,
-            size: 15,
-          ),
+          Icon(icon, color: color, size: 15),
           const SizedBox(width: 6),
           Text(
             text,
@@ -797,9 +743,7 @@ class _MessagePage extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
@@ -811,11 +755,7 @@ class _MessagePage extends StatelessWidget {
               color: accent.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(26),
             ),
-            child: Icon(
-              Icons.inbox_rounded,
-              color: accent,
-              size: 34,
-            ),
+            child: Icon(Icons.inbox_rounded, color: accent, size: 34),
           ),
           const SizedBox(height: 16),
           Text(
@@ -824,7 +764,7 @@ class _MessagePage extends StatelessWidget {
               color: AppTheme.dark,
               fontWeight: FontWeight.w900,
               fontSize: 20,
-              letterSpacing: -0.4,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 7),
@@ -846,10 +786,7 @@ class _MessagePage extends StatelessWidget {
     }
 
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(18),
-        child: content,
-      ),
+      child: Padding(padding: const EdgeInsets.all(18), child: content),
     );
   }
 }

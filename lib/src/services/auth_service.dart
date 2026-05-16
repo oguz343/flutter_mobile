@@ -1,4 +1,8 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:crypto/crypto.dart';
 
 import '../core/app_helpers.dart';
 import '../models/app_user.dart';
@@ -16,10 +20,7 @@ class LoginResult {
   final AppUser user;
   final bool requiresPasswordChange;
 
-  const LoginResult({
-    required this.user,
-    required this.requiresPasswordChange,
-  });
+  const LoginResult({required this.user, required this.requiresPasswordChange});
 }
 
 class AuthService {
@@ -64,9 +65,7 @@ class AuthService {
     }
 
     if (user.isDeleted) {
-      throw const AuthException(
-        'Bu kullanıcı pasif veya silinmiş görünüyor.',
-      );
+      throw const AuthException('Bu kullanıcı pasif veya silinmiş görünüyor.');
     }
 
     /*
@@ -90,7 +89,8 @@ class AuthService {
       );
     }
 
-    final activationMatches = user.activationCode.trim().isNotEmpty &&
+    final activationMatches =
+        user.activationCode.trim().isNotEmpty &&
         AppHelpers.normalizeKey(user.activationCode) ==
             AppHelpers.normalizeKey(cleanPassword);
 
@@ -101,10 +101,7 @@ class AuthService {
 
     if (user.mustChangePassword) {
       if (activationMatches || passwordMatches) {
-        return LoginResult(
-          user: user,
-          requiresPasswordChange: true,
-        );
+        return LoginResult(user: user, requiresPasswordChange: true);
       }
 
       throw const AuthException(
@@ -113,22 +110,14 @@ class AuthService {
     }
 
     if (passwordMatches) {
-      return LoginResult(
-        user: user,
-        requiresPasswordChange: false,
-      );
+      return LoginResult(user: user, requiresPasswordChange: false);
     }
 
     if (activationMatches) {
-      return LoginResult(
-        user: user,
-        requiresPasswordChange: true,
-      );
+      return LoginResult(user: user, requiresPasswordChange: true);
     }
 
-    throw const AuthException(
-      'Şifre hatalı. Bilgilerinizi kontrol edin.',
-    );
+    throw const AuthException('Şifre hatalı. Bilgilerinizi kontrol edin.');
   }
 
   bool _passwordMatches({
@@ -142,6 +131,10 @@ class AuthService {
       return false;
     }
 
+    if (_verifyPbkdf2Password(entered, stored)) {
+      return true;
+    }
+
     if (stored == entered) {
       return true;
     }
@@ -153,6 +146,86 @@ class AuthService {
     return false;
   }
 
+  bool _verifyPbkdf2Password(String enteredPassword, String storedHash) {
+    const prefix = 'PBKDF2_V1';
+    final parts = storedHash.split(r'$');
+
+    if (parts.length != 4 || parts.first != prefix) {
+      return false;
+    }
+
+    final iterations = int.tryParse(parts[1]);
+
+    if (iterations == null || iterations <= 0) {
+      return false;
+    }
+
+    try {
+      final salt = base64Decode(parts[2]);
+      final expectedHash = base64Decode(parts[3]);
+      final actualHash = _pbkdf2Sha256(
+        password: utf8.encode(enteredPassword),
+        salt: salt,
+        iterations: iterations,
+        length: expectedHash.length,
+      );
+
+      return _constantTimeEquals(actualHash, expectedHash);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Uint8List _pbkdf2Sha256({
+    required List<int> password,
+    required List<int> salt,
+    required int iterations,
+    required int length,
+  }) {
+    final hmac = Hmac(sha256, password);
+    final blockCount = (length / hmac.convert(<int>[]).bytes.length).ceil();
+    final output = BytesBuilder(copy: false);
+
+    for (var blockIndex = 1; blockIndex <= blockCount; blockIndex++) {
+      final blockSalt = <int>[
+        ...salt,
+        (blockIndex >> 24) & 0xff,
+        (blockIndex >> 16) & 0xff,
+        (blockIndex >> 8) & 0xff,
+        blockIndex & 0xff,
+      ];
+
+      var u = hmac.convert(blockSalt).bytes;
+      final block = List<int>.from(u);
+
+      for (var i = 1; i < iterations; i++) {
+        u = hmac.convert(u).bytes;
+
+        for (var j = 0; j < block.length; j++) {
+          block[j] ^= u[j];
+        }
+      }
+
+      output.add(block);
+    }
+
+    return Uint8List.fromList(output.toBytes().take(length).toList());
+  }
+
+  bool _constantTimeEquals(List<int> a, List<int> b) {
+    if (a.length != b.length) {
+      return false;
+    }
+
+    var diff = 0;
+
+    for (var i = 0; i < a.length; i++) {
+      diff |= a[i] ^ b[i];
+    }
+
+    return diff == 0;
+  }
+
   Future<AppUser?> findUserByRoleAndNumber({
     required String role,
     required String number,
@@ -162,14 +235,8 @@ class AuthService {
     final numberKey = AppHelpers.onlyDigits(number);
 
     final collections = roleKey == 'admin'
-        ? <String>[
-            'users',
-            'admins',
-            'admin',
-          ]
-        : <String>[
-            'users',
-          ];
+        ? <String>['users', 'admins', 'admin']
+        : <String>['users'];
 
     for (final collection in collections) {
       try {
@@ -184,15 +251,12 @@ class AuthService {
 
           var user = AppUser.fromDoc(doc);
 
-          var userRole = AppHelpers.getText(
-            data,
-            [
-              'role',
-              'Role',
-              'userRole',
-              'UserRole',
-            ],
-          );
+          var userRole = AppHelpers.getText(data, [
+            'role',
+            'Role',
+            'userRole',
+            'UserRole',
+          ]);
 
           if (userRole.trim().isEmpty) {
             userRole = user.role;
@@ -239,64 +303,56 @@ class AuthService {
             continue;
           }
 
-          final password = AppHelpers.getText(
-            data,
-            [
-              'password',
-              'Password',
-              'adminPassword',
-              'AdminPassword',
-              'pass',
-              'Pass',
-              'sifre',
-              'Sifre',
-              'şifre',
-              'Şifre',
-            ],
-          );
+          final password = AppHelpers.getText(data, [
+            'password',
+            'Password',
+            'passwordHash',
+            'PasswordHash',
+            'hash',
+            'Hash',
+            'adminPassword',
+            'AdminPassword',
+            'pass',
+            'Pass',
+            'sifre',
+            'Sifre',
+            'şifre',
+            'Şifre',
+          ]);
 
-          final activationCode = AppHelpers.getText(
-            data,
-            [
-              'activationCode',
-              'ActivationCode',
-              'activation',
-              'Activation',
-              'code',
-              'Code',
-            ],
-          );
+          final activationCode = AppHelpers.getText(data, [
+            'activationCode',
+            'ActivationCode',
+            'activation',
+            'Activation',
+            'code',
+            'Code',
+          ]);
 
-          final mustChangePassword = AppHelpers.getBool(
-            data,
-            [
-              'mustChangePassword',
-              'MustChangePassword',
-              'firstLogin',
-              'FirstLogin',
-              'isFirstLogin',
-              'IsFirstLogin',
-            ],
-          );
+          final mustChangePassword = AppHelpers.getBool(data, [
+            'mustChangePassword',
+            'MustChangePassword',
+            'firstLogin',
+            'FirstLogin',
+            'isFirstLogin',
+            'IsFirstLogin',
+          ]);
 
           final realNumber = AppHelpers.onlyDigits(
-            AppHelpers.getText(
-              data,
-              [
-                'schoolNo',
-                'SchoolNo',
-                'number',
-                'Number',
-                'studentNo',
-                'StudentNo',
-                'teacherNo',
-                'TeacherNo',
-                'adminNo',
-                'AdminNo',
-                'adminNumber',
-                'AdminNumber',
-              ],
-            ),
+            AppHelpers.getText(data, [
+              'schoolNo',
+              'SchoolNo',
+              'number',
+              'Number',
+              'studentNo',
+              'StudentNo',
+              'teacherNo',
+              'TeacherNo',
+              'adminNo',
+              'AdminNo',
+              'adminNumber',
+              'AdminNumber',
+            ]),
           );
 
           user = user.copyWith(
@@ -439,10 +495,7 @@ class AuthService {
     required String number,
     required String userId,
   }) async {
-    final collections = [
-      'passwordRequests',
-      'password_requests',
-    ];
+    final collections = ['passwordRequests', 'password_requests'];
 
     final roleKey = AppHelpers.normalizeKey(role);
     final numberKey = AppHelpers.onlyDigits(number);
@@ -458,46 +511,26 @@ class AuthService {
         }
 
         final requestRole = AppHelpers.normalizeKey(
-          AppHelpers.getText(
-            data,
-            [
-              'role',
-              'Role',
-            ],
-          ),
+          AppHelpers.getText(data, ['role', 'Role']),
         );
 
         final requestNumber = AppHelpers.onlyDigits(
-          AppHelpers.getText(
-            data,
-            [
-              'number',
-              'Number',
-              'schoolNo',
-              'SchoolNo',
-              'studentNo',
-              'StudentNo',
-            ],
-          ),
+          AppHelpers.getText(data, [
+            'number',
+            'Number',
+            'schoolNo',
+            'SchoolNo',
+            'studentNo',
+            'StudentNo',
+          ]),
         );
 
-        final requestUserId = AppHelpers.getText(
-          data,
-          [
-            'userId',
-            'UserId',
-          ],
-        );
+        final requestUserId = AppHelpers.getText(data, ['userId', 'UserId']);
 
-        final status = AppHelpers.getText(
-          data,
-          [
-            'status',
-            'Status',
-          ],
-        );
+        final status = AppHelpers.getText(data, ['status', 'Status']);
 
-        final sameUser = requestUserId == userId ||
+        final sameUser =
+            requestUserId == userId ||
             (requestRole == roleKey && requestNumber == numberKey);
 
         if (sameUser && AppHelpers.isPendingStatus(status)) {
@@ -516,23 +549,18 @@ class AuthService {
     final cleanPassword = newPassword.trim();
 
     if (cleanPassword.length < 4) {
-      throw const AuthException(
-        'Yeni şifre en az 4 karakter olmalı.',
-      );
+      throw const AuthException('Yeni şifre en az 4 karakter olmalı.');
     }
 
     final now = Timestamp.now();
 
-    await _db.collection('users').doc(user.id).set(
-      {
-        'password': cleanPassword,
-        'mustChangePassword': false,
-        'activationCode': '',
-        'updatedAt': now,
-        'passwordChangedAt': now,
-      },
-      SetOptions(merge: true),
-    );
+    await _db.collection('users').doc(user.id).set({
+      'password': cleanPassword,
+      'mustChangePassword': false,
+      'activationCode': '',
+      'updatedAt': now,
+      'passwordChangedAt': now,
+    }, SetOptions(merge: true));
 
     await _completePasswordRequestsForUser(user);
 
@@ -544,10 +572,7 @@ class AuthService {
   }
 
   Future<void> _completePasswordRequestsForUser(AppUser user) async {
-    final collections = [
-      'passwordRequests',
-      'password_requests',
-    ];
+    final collections = ['passwordRequests', 'password_requests'];
 
     for (final collection in collections) {
       final snapshot = await _db.collection(collection).get();
@@ -555,39 +580,25 @@ class AuthService {
       for (final doc in snapshot.docs) {
         final data = doc.data();
 
-        final requestUserId = AppHelpers.getText(
-          data,
-          [
-            'userId',
-            'UserId',
-          ],
-        );
+        final requestUserId = AppHelpers.getText(data, ['userId', 'UserId']);
 
         final requestRole = AppHelpers.normalizeKey(
-          AppHelpers.getText(
-            data,
-            [
-              'role',
-              'Role',
-            ],
-          ),
+          AppHelpers.getText(data, ['role', 'Role']),
         );
 
         final requestNumber = AppHelpers.onlyDigits(
-          AppHelpers.getText(
-            data,
-            [
-              'number',
-              'Number',
-              'schoolNo',
-              'SchoolNo',
-              'studentNo',
-              'StudentNo',
-            ],
-          ),
+          AppHelpers.getText(data, [
+            'number',
+            'Number',
+            'schoolNo',
+            'SchoolNo',
+            'studentNo',
+            'StudentNo',
+          ]),
         );
 
-        final same = requestUserId == user.id ||
+        final same =
+            requestUserId == user.id ||
             (requestRole == AppHelpers.normalizeKey(user.role) &&
                 requestNumber == AppHelpers.onlyDigits(user.number));
 
@@ -595,15 +606,12 @@ class AuthService {
           continue;
         }
 
-        await doc.reference.set(
-          {
-            'status': 'Tamamlandı',
-            'isActive': false,
-            'completedAt': Timestamp.now(),
-            'updatedAt': Timestamp.now(),
-          },
-          SetOptions(merge: true),
-        );
+        await doc.reference.set({
+          'status': 'Tamamlandı',
+          'isActive': false,
+          'completedAt': Timestamp.now(),
+          'updatedAt': Timestamp.now(),
+        }, SetOptions(merge: true));
       }
     }
   }

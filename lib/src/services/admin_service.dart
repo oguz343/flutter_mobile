@@ -29,70 +29,40 @@ class PasswordRequestModel {
 
   bool get isPending => AppHelpers.isPendingStatus(status);
 
-  factory PasswordRequestModel.fromDoc(DocumentSnapshot<Map<String, dynamic>> doc) {
+  factory PasswordRequestModel.fromDoc(
+    DocumentSnapshot<Map<String, dynamic>> doc,
+  ) {
     final data = doc.data() ?? <String, dynamic>{};
 
     return PasswordRequestModel(
       id: doc.id,
-      name: AppHelpers.getText(
-        data,
-        [
-          'name',
-          'Name',
-          'userName',
-          'UserName',
-          'fullName',
-          'FullName',
-        ],
-        defaultValue: '-',
-      ),
+      name: AppHelpers.getText(data, [
+        'name',
+        'Name',
+        'userName',
+        'UserName',
+        'fullName',
+        'FullName',
+      ], defaultValue: '-'),
       role: AppHelpers.normalizeRoleForSave(
-        AppHelpers.getText(
-          data,
-          [
-            'role',
-            'Role',
-          ],
-          defaultValue: '-',
-        ),
+        AppHelpers.getText(data, ['role', 'Role'], defaultValue: '-'),
       ),
       number: AppHelpers.onlyDigits(
-        AppHelpers.getText(
-          data,
-          [
-            'number',
-            'Number',
-            'schoolNo',
-            'SchoolNo',
-            'studentNo',
-            'StudentNo',
-          ],
-        ),
+        AppHelpers.getText(data, [
+          'number',
+          'Number',
+          'schoolNo',
+          'SchoolNo',
+          'studentNo',
+          'StudentNo',
+        ]),
       ),
-      note: AppHelpers.getText(
-        data,
-        [
-          'note',
-          'Note',
-          'message',
-          'Message',
-        ],
-      ),
-      status: AppHelpers.getText(
-        data,
-        [
-          'status',
-          'Status',
-        ],
-        defaultValue: 'Bekliyor',
-      ),
-      createdAt: AppHelpers.getDate(
-        data,
-        [
-          'createdAt',
-          'CreatedAt',
-        ],
-      ),
+      note: AppHelpers.getText(data, ['note', 'Note', 'message', 'Message']),
+      status: AppHelpers.getText(data, [
+        'status',
+        'Status',
+      ], defaultValue: 'Bekliyor'),
+      createdAt: AppHelpers.getDate(data, ['createdAt', 'CreatedAt']),
     );
   }
 }
@@ -114,42 +84,32 @@ class SchoolClassModel {
     final data = doc.data() ?? <String, dynamic>{};
 
     final className = AppHelpers.normalizeClassName(
-      AppHelpers.getText(
-        data,
-        [
-          'name',
-          'Name',
-          'className',
-          'ClassName',
-          'class',
-          'Class',
-        ],
-      ),
+      AppHelpers.getText(data, [
+        'name',
+        'Name',
+        'className',
+        'ClassName',
+        'class',
+        'Class',
+      ]),
     );
 
     return SchoolClassModel(
       id: doc.id,
       name: className.isEmpty ? '-' : className,
-      teacherName: AppHelpers.getText(
-        data,
-        [
-          'teacherName',
-          'TeacherName',
-          'classTeacherName',
-          'ClassTeacherName',
-        ],
-        defaultValue: '-',
-      ),
+      teacherName: AppHelpers.getText(data, [
+        'teacherName',
+        'TeacherName',
+        'classTeacherName',
+        'ClassTeacherName',
+      ], defaultValue: '-'),
       teacherNo: AppHelpers.onlyDigits(
-        AppHelpers.getText(
-          data,
-          [
-            'teacherNo',
-            'TeacherNo',
-            'classTeacherNo',
-            'ClassTeacherNo',
-          ],
-        ),
+        AppHelpers.getText(data, [
+          'teacherNo',
+          'TeacherNo',
+          'classTeacherNo',
+          'ClassTeacherNo',
+        ]),
       ),
     );
   }
@@ -263,14 +223,17 @@ class AdminService {
     }
 
     void listenTo(String collection) {
-      final sub = _db.collection(collection).snapshots().listen(
-        (_) => emit(),
-        onError: (error) {
-          if (!controller.isClosed) {
-            controller.addError(error);
-          }
-        },
-      );
+      final sub = _db
+          .collection(collection)
+          .snapshots()
+          .listen(
+            (_) => emit(),
+            onError: (error) {
+              if (!controller.isClosed) {
+                controller.addError(error);
+              }
+            },
+          );
 
       subscriptions.add(sub);
     }
@@ -429,27 +392,21 @@ class AdminService {
           continue;
         }
 
-        final title = AppHelpers.getText(
-          data,
-          [
-            'title',
-            'Title',
-            'name',
-            'Name',
-          ],
-        );
+        final title = AppHelpers.getText(data, [
+          'title',
+          'Title',
+          'name',
+          'Name',
+        ]);
 
-        final content = AppHelpers.getText(
-          data,
-          [
-            'content',
-            'Content',
-            'message',
-            'Message',
-            'description',
-            'Description',
-          ],
-        );
+        final content = AppHelpers.getText(data, [
+          'content',
+          'Content',
+          'message',
+          'Message',
+          'description',
+          'Description',
+        ]);
 
         if (title.trim().isEmpty && content.trim().isEmpty) {
           continue;
@@ -470,10 +427,7 @@ class AdminService {
   }
 
   Future<List<SubmissionModel>> loadSubmissions() async {
-    final collections = [
-      'homework_submissions',
-      'submissions',
-    ];
+    final collections = ['homework_submissions', 'submissions'];
 
     final result = <SubmissionModel>[];
     final seen = <String>{};
@@ -530,10 +484,7 @@ class AdminService {
   }
 
   Future<List<PasswordRequestModel>> loadPasswordRequests() async {
-    final collections = [
-      'passwordRequests',
-      'password_requests',
-    ];
+    final collections = ['passwordRequests', 'password_requests'];
 
     final result = <PasswordRequestModel>[];
     final seen = <String>{};

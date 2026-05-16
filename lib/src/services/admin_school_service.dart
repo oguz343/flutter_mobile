@@ -15,6 +15,18 @@ class AdminSchoolException implements Exception {
   String toString() => message;
 }
 
+class LessonCreateResult {
+  final int createdCount;
+  final int skippedCount;
+
+  const LessonCreateResult({
+    required this.createdCount,
+    required this.skippedCount,
+  });
+
+  bool get hasSkipped => skippedCount > 0;
+}
+
 class AdminSchoolData {
   final List<SchoolClassModel> classes;
   final List<LessonModel> lessons;
@@ -118,32 +130,30 @@ class AdminSchoolService {
 
     final now = Timestamp.now();
 
-    await _db.collection('classes').add(
-      {
-        'name': cleanClass,
-        'Name': cleanClass,
-        'className': cleanClass,
-        'ClassName': cleanClass,
-        'class': cleanClass,
-        'Class': cleanClass,
-        'teacherName': classTeacher?.name ?? '',
-        'TeacherName': classTeacher?.name ?? '',
-        'classTeacherName': classTeacher?.name ?? '',
-        'ClassTeacherName': classTeacher?.name ?? '',
-        'teacherNo': classTeacher?.number ?? '',
-        'TeacherNo': classTeacher?.number ?? '',
-        'classTeacherNo': classTeacher?.number ?? '',
-        'ClassTeacherNo': classTeacher?.number ?? '',
-        'isDeleted': false,
-        'IsDeleted': false,
-        'isActive': true,
-        'IsActive': true,
-        'createdAt': now,
-        'CreatedAt': now,
-        'updatedAt': now,
-        'UpdatedAt': now,
-      },
-    );
+    await _db.collection('classes').add({
+      'name': cleanClass,
+      'Name': cleanClass,
+      'className': cleanClass,
+      'ClassName': cleanClass,
+      'class': cleanClass,
+      'Class': cleanClass,
+      'teacherName': classTeacher?.name ?? '',
+      'TeacherName': classTeacher?.name ?? '',
+      'classTeacherName': classTeacher?.name ?? '',
+      'ClassTeacherName': classTeacher?.name ?? '',
+      'teacherNo': classTeacher?.number ?? '',
+      'TeacherNo': classTeacher?.number ?? '',
+      'classTeacherNo': classTeacher?.number ?? '',
+      'ClassTeacherNo': classTeacher?.number ?? '',
+      'isDeleted': false,
+      'IsDeleted': false,
+      'isActive': true,
+      'IsActive': true,
+      'createdAt': now,
+      'CreatedAt': now,
+      'updatedAt': now,
+      'UpdatedAt': now,
+    });
   }
 
   Future<void> updateClass({
@@ -157,58 +167,46 @@ class AdminSchoolService {
       throw const AdminSchoolException('Sınıf seçmelisiniz.');
     }
 
-    final exists = await classExists(
-      cleanClass,
-      exceptClassId: schoolClass.id,
-    );
+    final exists = await classExists(cleanClass, exceptClassId: schoolClass.id);
 
     if (exists) {
       throw const AdminSchoolException('Bu sınıf zaten kayıtlı.');
     }
 
-    await _db.collection('classes').doc(schoolClass.id).set(
-      {
-        'name': cleanClass,
-        'Name': cleanClass,
-        'className': cleanClass,
-        'ClassName': cleanClass,
-        'class': cleanClass,
-        'Class': cleanClass,
-        'teacherName': classTeacher?.name ?? '',
-        'TeacherName': classTeacher?.name ?? '',
-        'classTeacherName': classTeacher?.name ?? '',
-        'ClassTeacherName': classTeacher?.name ?? '',
-        'teacherNo': classTeacher?.number ?? '',
-        'TeacherNo': classTeacher?.number ?? '',
-        'classTeacherNo': classTeacher?.number ?? '',
-        'ClassTeacherNo': classTeacher?.number ?? '',
-        'updatedAt': Timestamp.now(),
-        'UpdatedAt': Timestamp.now(),
-      },
-      SetOptions(merge: true),
-    );
+    await _db.collection('classes').doc(schoolClass.id).set({
+      'name': cleanClass,
+      'Name': cleanClass,
+      'className': cleanClass,
+      'ClassName': cleanClass,
+      'class': cleanClass,
+      'Class': cleanClass,
+      'teacherName': classTeacher?.name ?? '',
+      'TeacherName': classTeacher?.name ?? '',
+      'classTeacherName': classTeacher?.name ?? '',
+      'ClassTeacherName': classTeacher?.name ?? '',
+      'teacherNo': classTeacher?.number ?? '',
+      'TeacherNo': classTeacher?.number ?? '',
+      'classTeacherNo': classTeacher?.number ?? '',
+      'ClassTeacherNo': classTeacher?.number ?? '',
+      'updatedAt': Timestamp.now(),
+      'UpdatedAt': Timestamp.now(),
+    }, SetOptions(merge: true));
   }
 
   Future<void> deleteClass(SchoolClassModel schoolClass) async {
-    await _db.collection('classes').doc(schoolClass.id).set(
-      {
-        'isDeleted': true,
-        'IsDeleted': true,
-        'isActive': false,
-        'IsActive': false,
-        'deletedAt': Timestamp.now(),
-        'DeletedAt': Timestamp.now(),
-        'updatedAt': Timestamp.now(),
-        'UpdatedAt': Timestamp.now(),
-      },
-      SetOptions(merge: true),
-    );
+    await _db.collection('classes').doc(schoolClass.id).set({
+      'isDeleted': true,
+      'IsDeleted': true,
+      'isActive': false,
+      'IsActive': false,
+      'deletedAt': Timestamp.now(),
+      'DeletedAt': Timestamp.now(),
+      'updatedAt': Timestamp.now(),
+      'UpdatedAt': Timestamp.now(),
+    }, SetOptions(merge: true));
   }
 
-  Future<bool> classExists(
-    String className, {
-    String? exceptClassId,
-  }) async {
+  Future<bool> classExists(String className, {String? exceptClassId}) async {
     final cleanClass = AppHelpers.normalizeClassName(className);
 
     final snapshot = await _db.collection('classes').get();
@@ -225,17 +223,14 @@ class AdminSchoolService {
       }
 
       final current = AppHelpers.normalizeClassName(
-        AppHelpers.getText(
-          data,
-          [
-            'name',
-            'Name',
-            'className',
-            'ClassName',
-            'class',
-            'Class',
-          ],
-        ),
+        AppHelpers.getText(data, [
+          'name',
+          'Name',
+          'className',
+          'ClassName',
+          'class',
+          'Class',
+        ]),
       );
 
       if (current == cleanClass) {
@@ -246,42 +241,48 @@ class AdminSchoolService {
     return false;
   }
 
-  Future<void> createLesson({
+  Future<LessonCreateResult> createLesson({
     required String lessonName,
     required String className,
+    List<String>? classNames,
     required AppUser? teacher,
   }) async {
     final cleanLesson = lessonName.trim();
-    final cleanClass = AppHelpers.normalizeClassName(className);
+    final cleanClasses = <String>[
+      if (classNames != null)
+        for (final item in classNames) AppHelpers.normalizeClassName(item),
+      AppHelpers.normalizeClassName(className),
+    ].where((x) => x.isNotEmpty).toSet().toList();
 
     if (cleanLesson.isEmpty) {
       throw const AdminSchoolException('Ders adı boş bırakılamaz.');
     }
 
-    if (cleanClass.isEmpty) {
-      throw const AdminSchoolException('Sınıf seçmelisiniz.');
+    if (cleanClasses.isEmpty) {
+      throw const AdminSchoolException('En az bir sınıf seçmelisiniz.');
     }
 
     if (teacher == null) {
       throw const AdminSchoolException('Öğretmen seçmelisiniz.');
     }
 
-    final exists = await lessonExists(
-      lessonName: cleanLesson,
-      className: cleanClass,
-      teacherNo: teacher.number,
-    );
-
-    if (exists) {
-      throw const AdminSchoolException(
-        'Bu sınıf, ders ve öğretmen eşleşmesi zaten kayıtlı.',
-      );
-    }
-
     final now = Timestamp.now();
+    var createdCount = 0;
+    var skippedCount = 0;
 
-    await _db.collection('lessons').add(
-      {
+    for (final cleanClass in cleanClasses) {
+      final exists = await lessonExists(
+        lessonName: cleanLesson,
+        className: cleanClass,
+        teacherNo: teacher.number,
+      );
+
+      if (exists) {
+        skippedCount++;
+        continue;
+      }
+
+      await _db.collection('lessons').add({
         'name': cleanLesson,
         'Name': cleanLesson,
         'lessonName': cleanLesson,
@@ -296,6 +297,8 @@ class AdminSchoolService {
         'Class': cleanClass,
         'targetClass': cleanClass,
         'TargetClass': cleanClass,
+        'teacherId': teacher.id,
+        'TeacherId': teacher.id,
         'teacherName': teacher.name,
         'TeacherName': teacher.name,
         'teacher': teacher.name,
@@ -316,7 +319,19 @@ class AdminSchoolService {
         'CreatedAt': now,
         'updatedAt': now,
         'UpdatedAt': now,
-      },
+      });
+      createdCount++;
+    }
+
+    if (createdCount == 0) {
+      throw const AdminSchoolException(
+        'Seçtiğiniz ders atamaları zaten kayıtlı.',
+      );
+    }
+
+    return LessonCreateResult(
+      createdCount: createdCount,
+      skippedCount: skippedCount,
     );
   }
 
@@ -354,55 +369,51 @@ class AdminSchoolService {
       );
     }
 
-    await _db.collection('lessons').doc(lesson.id).set(
-      {
-        'name': cleanLesson,
-        'Name': cleanLesson,
-        'lessonName': cleanLesson,
-        'LessonName': cleanLesson,
-        'title': cleanLesson,
-        'Title': cleanLesson,
-        'courseName': cleanLesson,
-        'CourseName': cleanLesson,
-        'className': cleanClass,
-        'ClassName': cleanClass,
-        'class': cleanClass,
-        'Class': cleanClass,
-        'targetClass': cleanClass,
-        'TargetClass': cleanClass,
-        'teacherName': teacher.name,
-        'TeacherName': teacher.name,
-        'teacher': teacher.name,
-        'Teacher': teacher.name,
-        'teacherNo': teacher.number,
-        'TeacherNo': teacher.number,
-        'teacherNumber': teacher.number,
-        'TeacherNumber': teacher.number,
-        'branch': teacher.branch,
-        'Branch': teacher.branch,
-        'teacherBranch': teacher.branch,
-        'TeacherBranch': teacher.branch,
-        'updatedAt': Timestamp.now(),
-        'UpdatedAt': Timestamp.now(),
-      },
-      SetOptions(merge: true),
-    );
+    await _db.collection('lessons').doc(lesson.id).set({
+      'name': cleanLesson,
+      'Name': cleanLesson,
+      'lessonName': cleanLesson,
+      'LessonName': cleanLesson,
+      'title': cleanLesson,
+      'Title': cleanLesson,
+      'courseName': cleanLesson,
+      'CourseName': cleanLesson,
+      'className': cleanClass,
+      'ClassName': cleanClass,
+      'class': cleanClass,
+      'Class': cleanClass,
+      'targetClass': cleanClass,
+      'TargetClass': cleanClass,
+      'teacherId': teacher.id,
+      'TeacherId': teacher.id,
+      'teacherName': teacher.name,
+      'TeacherName': teacher.name,
+      'teacher': teacher.name,
+      'Teacher': teacher.name,
+      'teacherNo': teacher.number,
+      'TeacherNo': teacher.number,
+      'teacherNumber': teacher.number,
+      'TeacherNumber': teacher.number,
+      'branch': teacher.branch,
+      'Branch': teacher.branch,
+      'teacherBranch': teacher.branch,
+      'TeacherBranch': teacher.branch,
+      'updatedAt': Timestamp.now(),
+      'UpdatedAt': Timestamp.now(),
+    }, SetOptions(merge: true));
   }
 
   Future<void> deleteLesson(LessonModel lesson) async {
-    await _db.collection('lessons').doc(lesson.id).set(
-      {
-        'isDeleted': true,
-        'IsDeleted': true,
-        'isActive': false,
-        'IsActive': false,
-        'deletedAt': Timestamp.now(),
-        'DeletedAt': Timestamp.now(),
-        'updatedAt': Timestamp.now(),
-        'UpdatedAt': Timestamp.now(),
-      },
-      SetOptions(merge: true),
-    );
+    await _db.collection('lessons').doc(lesson.id).set({
+      'isDeleted': true,
+      'IsDeleted': true,
+      'isActive': false,
+      'IsActive': false,
+      'deletedAt': Timestamp.now(),
+      'DeletedAt': Timestamp.now(),
+      'updatedAt': Timestamp.now(),
+      'UpdatedAt': Timestamp.now(),
+    }, SetOptions(merge: true));
   }
 
   Future<bool> lessonExists({
@@ -413,7 +424,6 @@ class AdminSchoolService {
   }) async {
     final lessonKey = AppHelpers.normalizeKey(lessonName);
     final classKey = AppHelpers.normalizeClassName(className);
-    final teacherKey = AppHelpers.onlyDigits(teacherNo);
 
     final snapshot = await _db.collection('lessons').get();
 
@@ -429,50 +439,30 @@ class AdminSchoolService {
       }
 
       final currentLesson = AppHelpers.normalizeKey(
-        AppHelpers.getText(
-          data,
-          [
-            'name',
-            'Name',
-            'lessonName',
-            'LessonName',
-            'title',
-            'Title',
-            'courseName',
-            'CourseName',
-          ],
-        ),
+        AppHelpers.getText(data, [
+          'name',
+          'Name',
+          'lessonName',
+          'LessonName',
+          'title',
+          'Title',
+          'courseName',
+          'CourseName',
+        ]),
       );
 
       final currentClass = AppHelpers.normalizeClassName(
-        AppHelpers.getText(
-          data,
-          [
-            'className',
-            'ClassName',
-            'class',
-            'Class',
-            'targetClass',
-            'TargetClass',
-          ],
-        ),
+        AppHelpers.getText(data, [
+          'className',
+          'ClassName',
+          'class',
+          'Class',
+          'targetClass',
+          'TargetClass',
+        ]),
       );
 
-      final currentTeacher = AppHelpers.onlyDigits(
-        AppHelpers.getText(
-          data,
-          [
-            'teacherNo',
-            'TeacherNo',
-            'teacherNumber',
-            'TeacherNumber',
-          ],
-        ),
-      );
-
-      if (currentLesson == lessonKey &&
-          currentClass == classKey &&
-          currentTeacher == teacherKey) {
+      if (currentLesson == lessonKey && currentClass == classKey) {
         return true;
       }
     }
@@ -499,55 +489,50 @@ class AdminSchoolService {
 
     final now = Timestamp.now();
 
-    await _db.collection('announcements').add(
-      {
-        'title': cleanTitle,
-        'Title': cleanTitle,
-        'name': cleanTitle,
-        'Name': cleanTitle,
-        'content': cleanContent,
-        'Content': cleanContent,
-        'message': cleanContent,
-        'Message': cleanContent,
-        'description': cleanContent,
-        'Description': cleanContent,
-        'target': cleanTarget,
-        'Target': cleanTarget,
-        'targetRole': cleanTarget,
-        'TargetRole': cleanTarget,
-        'audience': cleanTarget,
-        'Audience': cleanTarget,
-        'author': 'Admin',
-        'Author': 'Admin',
-        'createdBy': 'Admin',
-        'CreatedBy': 'Admin',
-        'isDeleted': false,
-        'IsDeleted': false,
-        'isActive': true,
-        'IsActive': true,
-        'createdAt': now,
-        'CreatedAt': now,
-        'publishedAt': now,
-        'PublishedAt': now,
-        'updatedAt': now,
-        'UpdatedAt': now,
-      },
-    );
+    await _db.collection('announcements').add({
+      'title': cleanTitle,
+      'Title': cleanTitle,
+      'name': cleanTitle,
+      'Name': cleanTitle,
+      'content': cleanContent,
+      'Content': cleanContent,
+      'message': cleanContent,
+      'Message': cleanContent,
+      'description': cleanContent,
+      'Description': cleanContent,
+      'target': cleanTarget,
+      'Target': cleanTarget,
+      'targetRole': cleanTarget,
+      'TargetRole': cleanTarget,
+      'audience': cleanTarget,
+      'Audience': cleanTarget,
+      'author': 'Admin',
+      'Author': 'Admin',
+      'createdBy': 'Admin',
+      'CreatedBy': 'Admin',
+      'isDeleted': false,
+      'IsDeleted': false,
+      'isActive': true,
+      'IsActive': true,
+      'createdAt': now,
+      'CreatedAt': now,
+      'publishedAt': now,
+      'PublishedAt': now,
+      'updatedAt': now,
+      'UpdatedAt': now,
+    });
   }
 
   Future<void> deleteAnnouncement(AnnouncementModel announcement) async {
-    await _db.collection('announcements').doc(announcement.id).set(
-      {
-        'isDeleted': true,
-        'IsDeleted': true,
-        'isActive': false,
-        'IsActive': false,
-        'deletedAt': Timestamp.now(),
-        'DeletedAt': Timestamp.now(),
-        'updatedAt': Timestamp.now(),
-        'UpdatedAt': Timestamp.now(),
-      },
-      SetOptions(merge: true),
-    );
+    await _db.collection('announcements').doc(announcement.id).set({
+      'isDeleted': true,
+      'IsDeleted': true,
+      'isActive': false,
+      'IsActive': false,
+      'deletedAt': Timestamp.now(),
+      'DeletedAt': Timestamp.now(),
+      'updatedAt': Timestamp.now(),
+      'UpdatedAt': Timestamp.now(),
+    }, SetOptions(merge: true));
   }
 }

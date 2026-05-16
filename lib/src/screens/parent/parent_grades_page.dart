@@ -8,10 +8,7 @@ import '../../widgets/smart_link_text.dart';
 class ParentGradesPage extends StatelessWidget {
   final Color accent;
 
-  const ParentGradesPage({
-    super.key,
-    required this.accent,
-  });
+  const ParentGradesPage({super.key, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -32,11 +29,9 @@ class ParentGradesPage extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
 
-        final data = snapshot.data ??
-            const ParentStudentBundle(
-              student: null,
-              assignments: [],
-            );
+        final data =
+            snapshot.data ??
+            const ParentStudentBundle(student: null, assignments: []);
 
         final graded = data.assignments
             .where((x) => x.submission?.isEvaluated ?? false)
@@ -47,10 +42,7 @@ class ParentGradesPage extends StatelessWidget {
           padding: const EdgeInsets.fromLTRB(18, 8, 18, 24),
           child: Column(
             children: [
-              _GradesHero(
-                accent: accent,
-                count: graded.length,
-              ),
+              _GradesHero(accent: accent, count: graded.length),
               const SizedBox(height: 16),
               if (graded.isEmpty)
                 _Empty(
@@ -60,119 +52,112 @@ class ParentGradesPage extends StatelessWidget {
                       'Öğretmen değerlendirme yaptığında not ve geri dönüşler burada görünecek.',
                 )
               else
-                ...graded.map(
-                  (item) {
-                    final submission = item.submission!;
+                ...graded.map((item) {
+                  final submission = item.submission!;
 
-                    return Container(
-                      width: double.infinity,
-                      margin: const EdgeInsets.only(bottom: 14),
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(32),
-                        boxShadow: AppTheme.softShadow,
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 58,
-                                height: 58,
-                                decoration: BoxDecoration(
-                                  color: AppTheme.green.withValues(alpha: 0.12),
-                                  borderRadius: BorderRadius.circular(22),
-                                ),
-                                child: const Icon(
-                                  Icons.grade_rounded,
-                                  color: AppTheme.green,
-                                  size: 30,
-                                ),
+                  return Container(
+                    width: double.infinity,
+                    margin: const EdgeInsets.only(bottom: 14),
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(32),
+                      boxShadow: AppTheme.softShadow,
+                      border: Border.all(color: AppTheme.line),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 58,
+                              height: 58,
+                              decoration: BoxDecoration(
+                                color: AppTheme.green.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(22),
                               ),
-                              const SizedBox(width: 13),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      item.assignment.title,
-                                      style: const TextStyle(
-                                        color: AppTheme.dark,
-                                        fontWeight: FontWeight.w900,
-                                        fontSize: 16,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      '${item.assignment.lessonName} • ${item.assignment.className}',
-                                      style: const TextStyle(
-                                        color: AppTheme.muted,
-                                        fontWeight: FontWeight.w800,
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
+                              child: const Icon(
+                                Icons.grade_rounded,
+                                color: AppTheme.green,
+                                size: 30,
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 14,
-                                  vertical: 10,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.green.withValues(alpha: 0.11),
-                                  borderRadius: BorderRadius.circular(18),
-                                ),
-                                child: Text(
-                                  submission.score.trim().isEmpty
-                                      ? '-'
-                                      : submission.score,
-                                  style: const TextStyle(
-                                    color: AppTheme.green,
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: 18,
+                            ),
+                            const SizedBox(width: 13),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    item.assignment.title,
+                                    style: const TextStyle(
+                                      color: AppTheme.dark,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 16,
+                                    ),
                                   ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${item.assignment.lessonName} • ${item.assignment.className}',
+                                    style: const TextStyle(
+                                      color: AppTheme.muted,
+                                      fontWeight: FontWeight.w800,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 10,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.green.withValues(alpha: 0.11),
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              child: Text(
+                                submission.score.trim().isEmpty
+                                    ? '-'
+                                    : submission.score,
+                                style: const TextStyle(
+                                  color: AppTheme.green,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 18,
                                 ),
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 14),
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(14),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFECFDF5),
-                              borderRadius: BorderRadius.circular(22),
-                              border: Border.all(
-                                color: const Color(0xFFA7F3D0),
-                              ),
-                            ),
-                            child: Text(
-                              submission.feedback.trim().isEmpty
-                                  ? 'Geri dönüş yazılmamış.'
-                                  : submission.feedback,
-                              style: const TextStyle(
-                                color: Color(0xFF047857),
-                                fontWeight: FontWeight.w800,
-                                height: 1.4,
-                              ),
-                            ),
-                          ),
-                          if (submission.link.trim().isNotEmpty) ...[
-                            const SizedBox(height: 10),
-                            SmartLinkText(
-                              link: submission.link,
-                              color: accent,
                             ),
                           ],
+                        ),
+                        const SizedBox(height: 14),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(14),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFECFDF5),
+                            borderRadius: BorderRadius.circular(22),
+                            border: Border.all(color: const Color(0xFFA7F3D0)),
+                          ),
+                          child: Text(
+                            submission.feedback.trim().isEmpty
+                                ? 'Geri dönüş yazılmamış.'
+                                : submission.feedback,
+                            style: const TextStyle(
+                              color: Color(0xFF047857),
+                              fontWeight: FontWeight.w800,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                        if (submission.link.trim().isNotEmpty) ...[
+                          const SizedBox(height: 10),
+                          SmartLinkText(link: submission.link, color: accent),
                         ],
-                      ),
-                    );
-                  },
-                ),
+                      ],
+                    ),
+                  );
+                }),
             ],
           ),
         );
@@ -185,10 +170,7 @@ class _GradesHero extends StatelessWidget {
   final Color accent;
   final int count;
 
-  const _GradesHero({
-    required this.accent,
-    required this.count,
-  });
+  const _GradesHero({required this.accent, required this.count});
 
   @override
   Widget build(BuildContext context) {
@@ -197,10 +179,7 @@ class _GradesHero extends StatelessWidget {
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [
-            Color(0xFF10B981),
-            Color(0xFF06B6D4),
-          ],
+          colors: [Color(0xFF10B981), Color(0xFF06B6D4)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -239,7 +218,7 @@ class _GradesHero extends StatelessWidget {
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
                     fontSize: 27,
-                    letterSpacing: -0.9,
+                    letterSpacing: 0,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -280,7 +259,7 @@ class _Empty extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(32),
         boxShadow: AppTheme.softShadow,
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppTheme.line),
       ),
       child: Column(
         children: [

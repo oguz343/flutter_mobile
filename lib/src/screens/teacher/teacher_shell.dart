@@ -21,31 +21,22 @@ class TeacherShell extends StatelessWidget {
         PremiumShellItem(
           label: 'Panel',
           icon: Icons.dashboard_rounded,
-          child: TeacherDashboardPage(
-            accent: accent,
-          ),
+          child: TeacherDashboardPage(accent: accent),
         ),
         PremiumShellItem(
           label: 'Ödev',
           icon: Icons.assignment_rounded,
-          child: TeacherAssignmentsPage(
-            accent: accent,
-          ),
+          child: TeacherAssignmentsPage(accent: accent),
         ),
         PremiumShellItem(
           label: 'Teslim',
           icon: Icons.inbox_rounded,
-          child: TeacherSubmissionsPage(
-            accent: accent,
-          ),
+          child: TeacherSubmissionsPage(accent: accent),
         ),
         PremiumShellItem(
           label: 'Duyuru',
           icon: Icons.campaign_rounded,
-          child: AnnouncementsPage(
-            role: 'Öğretmen',
-            accent: accent,
-          ),
+          child: AnnouncementsPage(role: 'Öğretmen', accent: accent),
         ),
       ],
     );

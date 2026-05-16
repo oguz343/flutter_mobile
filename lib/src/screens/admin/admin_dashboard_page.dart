@@ -7,10 +7,7 @@ import '../../services/admin_service.dart';
 class AdminDashboardPage extends StatelessWidget {
   final Color accent;
 
-  const AdminDashboardPage({
-    super.key,
-    required this.accent,
-  });
+  const AdminDashboardPage({super.key, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -20,9 +17,7 @@ class AdminDashboardPage extends StatelessWidget {
       stream: service.watchDashboard(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (snapshot.hasError) {
@@ -33,7 +28,8 @@ class AdminDashboardPage extends StatelessWidget {
           );
         }
 
-        final data = snapshot.data ??
+        final data =
+            snapshot.data ??
             const AdminDashboardBundle(
               users: [],
               students: [],
@@ -145,10 +141,7 @@ class AdminDashboardPage extends StatelessWidget {
                 )
               else
                 ...recentRequests.map(
-                  (item) => _RequestRow(
-                    item: item,
-                    accent: accent,
-                  ),
+                  (item) => _RequestRow(item: item, accent: accent),
                 ),
               const SizedBox(height: 18),
               _SectionTitle(
@@ -157,10 +150,7 @@ class AdminDashboardPage extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               if (recentSubmissions.isEmpty)
-                _SmallEmpty(
-                  text: 'Henüz teslim bulunmuyor.',
-                  accent: accent,
-                )
+                _SmallEmpty(text: 'Henüz teslim bulunmuyor.', accent: accent)
               else
                 ...recentSubmissions.map(
                   (item) => _SubmissionRow(
@@ -183,10 +173,7 @@ class _Hero extends StatelessWidget {
   final Color accent;
   final int requestCount;
 
-  const _Hero({
-    required this.accent,
-    required this.requestCount,
-  });
+  const _Hero({required this.accent, required this.requestCount});
 
   @override
   Widget build(BuildContext context) {
@@ -199,10 +186,7 @@ class _Hero extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            accent,
-            const Color(0xFF06B6D4),
-          ],
+          colors: [accent, const Color(0xFF06B6D4)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -241,7 +225,7 @@ class _Hero extends StatelessWidget {
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
                     fontSize: 25,
-                    letterSpacing: -0.7,
+                    letterSpacing: 0,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -283,19 +267,13 @@ class _StatCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            color: color,
-            size: 28,
-          ),
+          Icon(icon, color: color, size: 28),
           const Spacer(),
           Text(
             value,
@@ -303,7 +281,7 @@ class _StatCard extends StatelessWidget {
               color: AppTheme.dark,
               fontWeight: FontWeight.w900,
               fontSize: 28,
-              letterSpacing: -0.8,
+              letterSpacing: 0,
             ),
           ),
           Text(
@@ -346,9 +324,7 @@ class _WideSummaryCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
         boxShadow: AppTheme.softShadow,
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
       ),
       child: Column(
         children: [
@@ -402,10 +378,7 @@ class _SummaryLine extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(
-          icon,
-          color: color,
-        ),
+        Icon(icon, color: color),
         const SizedBox(width: 12),
         Expanded(
           child: Text(
@@ -434,10 +407,7 @@ class _SectionTitle extends StatelessWidget {
   final String title;
   final String subtitle;
 
-  const _SectionTitle({
-    required this.title,
-    required this.subtitle,
-  });
+  const _SectionTitle({required this.title, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
@@ -450,7 +420,7 @@ class _SectionTitle extends StatelessWidget {
             color: AppTheme.dark,
             fontWeight: FontWeight.w900,
             fontSize: 20,
-            letterSpacing: -0.5,
+            letterSpacing: 0,
           ),
         ),
         const SizedBox(height: 3),
@@ -471,14 +441,13 @@ class _RequestRow extends StatelessWidget {
   final PasswordRequestModel item;
   final Color accent;
 
-  const _RequestRow({
-    required this.item,
-    required this.accent,
-  });
+  const _RequestRow({required this.item, required this.accent});
 
   @override
   Widget build(BuildContext context) {
-    final color = item.isPending ? const Color(0xFFEF4444) : const Color(0xFF10B981);
+    final color = item.isPending
+        ? const Color(0xFFEF4444)
+        : const Color(0xFF10B981);
 
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
@@ -487,9 +456,7 @@ class _RequestRow extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: AppTheme.softShadow,
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
       ),
       child: Row(
         children: [
@@ -500,10 +467,7 @@ class _RequestRow extends StatelessWidget {
               color: color.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(17),
             ),
-            child: Icon(
-              Icons.lock_reset_rounded,
-              color: color,
-            ),
+            child: Icon(Icons.lock_reset_rounded, color: color),
           ),
           const SizedBox(width: 13),
           Expanded(
@@ -530,10 +494,7 @@ class _RequestRow extends StatelessWidget {
               ],
             ),
           ),
-          _Pill(
-            text: item.status,
-            color: color,
-          ),
+          _Pill(text: item.status, color: color),
         ],
       ),
     );
@@ -564,9 +525,7 @@ class _SubmissionRow extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(24),
         boxShadow: AppTheme.softShadow,
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
       ),
       child: Row(
         children: [
@@ -607,10 +566,7 @@ class _SubmissionRow extends StatelessWidget {
               ],
             ),
           ),
-          _Pill(
-            text: evaluated ? 'Notlandı' : 'Bekliyor',
-            color: color,
-          ),
+          _Pill(text: evaluated ? 'Notlandı' : 'Bekliyor', color: color),
         ],
       ),
     );
@@ -621,18 +577,12 @@ class _Pill extends StatelessWidget {
   final String text;
   final Color color;
 
-  const _Pill({
-    required this.text,
-    required this.color,
-  });
+  const _Pill({required this.text, required this.color});
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 10,
-        vertical: 7,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.11),
         borderRadius: BorderRadius.circular(999),
@@ -653,10 +603,7 @@ class _SmallEmpty extends StatelessWidget {
   final String text;
   final Color accent;
 
-  const _SmallEmpty({
-    required this.text,
-    required this.accent,
-  });
+  const _SmallEmpty({required this.text, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -666,9 +613,7 @@ class _SmallEmpty extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Text(
@@ -708,11 +653,7 @@ class _MessageCard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.info_rounded,
-              color: accent,
-              size: 42,
-            ),
+            Icon(Icons.info_rounded, color: accent, size: 42),
             const SizedBox(height: 12),
             Text(
               title,

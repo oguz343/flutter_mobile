@@ -8,10 +8,7 @@ import '../../services/student_assignment_service.dart';
 class StudentDashboardPage extends StatelessWidget {
   final Color accent;
 
-  const StudentDashboardPage({
-    super.key,
-    required this.accent,
-  });
+  const StudentDashboardPage({super.key, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -34,8 +31,9 @@ class StudentDashboardPage extends StatelessWidget {
 
         final items = snapshot.data ?? [];
         final submitted = items.where((x) => x.submission != null).length;
-        final evaluated =
-            items.where((x) => x.submission?.isEvaluated ?? false).length;
+        final evaluated = items
+            .where((x) => x.submission?.isEvaluated ?? false)
+            .length;
         final pending = items.length - submitted;
         final progress = items.isEmpty ? 0.0 : submitted / items.length;
 
@@ -95,10 +93,7 @@ class StudentDashboardPage extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              _MissionCard(
-                accent: accent,
-                items: items.take(3).toList(),
-              ),
+              _MissionCard(accent: accent, items: items.take(3).toList()),
             ],
           ),
         );
@@ -169,10 +164,7 @@ class _StudentHero extends StatelessWidget {
                 height: 68,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      accent,
-                      AppTheme.cyan,
-                    ],
+                    colors: [accent, AppTheme.cyan],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
@@ -191,7 +183,7 @@ class _StudentHero extends StatelessWidget {
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
                   fontSize: 27,
-                  letterSpacing: -0.9,
+                  letterSpacing: 0,
                 ),
               ),
               const SizedBox(height: 6),
@@ -251,7 +243,7 @@ class _GlassStat extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(31),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
@@ -265,7 +257,7 @@ class _GlassStat extends StatelessWidget {
               color: color,
               fontWeight: FontWeight.w900,
               fontSize: 30,
-              letterSpacing: -1,
+              letterSpacing: 0,
             ),
           ),
           Text(
@@ -286,10 +278,7 @@ class _MissionCard extends StatelessWidget {
   final Color accent;
   final List<StudentAssignmentBundle> items;
 
-  const _MissionCard({
-    required this.accent,
-    required this.items,
-  });
+  const _MissionCard({required this.accent, required this.items});
 
   @override
   Widget build(BuildContext context) {
@@ -300,7 +289,7 @@ class _MissionCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(34),
         boxShadow: AppTheme.softShadow,
-        border: Border.all(color: const Color(0xFFE2E8F0)),
+        border: Border.all(color: AppTheme.line),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -311,7 +300,7 @@ class _MissionCard extends StatelessWidget {
               color: AppTheme.dark,
               fontWeight: FontWeight.w900,
               fontSize: 20,
-              letterSpacing: -0.6,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 5),
@@ -334,68 +323,63 @@ class _MissionCard extends StatelessWidget {
               ),
               child: Text(
                 'Şimdilik aktif görev yok.',
-                style: TextStyle(
-                  color: accent,
-                  fontWeight: FontWeight.w900,
-                ),
+                style: TextStyle(color: accent, fontWeight: FontWeight.w900),
               ),
             )
           else
-            ...items.map(
-              (item) {
-                final submitted = item.submission != null;
-                final color = submitted ? AppTheme.green : AppTheme.orange;
+            ...items.map((item) {
+              final submitted = item.submission != null;
+              final color = submitted ? AppTheme.green : AppTheme.orange;
 
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(23),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        submitted
-                            ? Icons.check_circle_rounded
-                            : Icons.radio_button_unchecked_rounded,
-                        color: color,
-                      ),
-                      const SizedBox(width: 11),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              item.assignment.title,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: AppTheme.dark,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 13.5,
-                              ),
+              return Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(23),
+                  border: Border.all(color: AppTheme.line),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      submitted
+                          ? Icons.check_circle_rounded
+                          : Icons.radio_button_unchecked_rounded,
+                      color: color,
+                    ),
+                    const SizedBox(width: 11),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            item.assignment.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppTheme.dark,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 13.5,
                             ),
-                            const SizedBox(height: 3),
-                            Text(
-                              '${item.assignment.lessonName} • ${AppHelpers.formatDate(item.assignment.dueDate)}',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                color: AppTheme.muted,
-                                fontWeight: FontWeight.w800,
-                                fontSize: 11.5,
-                              ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            '${item.assignment.lessonName} • ${AppHelpers.formatDate(item.assignment.dueDate)}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppTheme.muted,
+                              fontWeight: FontWeight.w800,
+                              fontSize: 11.5,
                             ),
-                          ],
-                        ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                    ),
+                  ],
+                ),
+              );
+            }),
         ],
       ),
     );

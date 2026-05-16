@@ -68,60 +68,67 @@ class _PremiumShellState extends State<PremiumShell> {
   void _logout() {
     AppSession.clear();
 
-    Navigator.of(context).pushNamedAndRemoveUntil(
-      '/',
-      (route) => false,
-    );
+    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
   }
 
   @override
   Widget build(BuildContext context) {
     final user = AppSession.currentUser;
+    final size = MediaQuery.sizeOf(context);
+    final wide = size.width >= 760;
 
     return Scaffold(
       extendBody: true,
       resizeToAvoidBottomInset: true,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              widget.accent.withValues(alpha: 0.13),
-              const Color(0xFFF8FAFC),
-              const Color(0xFFEFF6FF),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
-                child: _PremiumHeader(
-                  title: widget.title,
-                  subtitle: widget.subtitle,
-                  accent: widget.accent,
-                  name: user?.name ?? 'Kullanıcı',
-                  number: user?.number ?? '-',
-                  onLogout: _logout,
+      body: Stack(
+        children: [
+          _ShellBackdrop(accent: widget.accent),
+          SafeArea(
+            bottom: false,
+            child: Column(
+              children: [
+                Padding(
+                  padding: EdgeInsets.fromLTRB(
+                    wide ? 22 : 14,
+                    wide ? 16 : 10,
+                    wide ? 22 : 14,
+                    10,
+                  ),
+                  child: _PremiumHeader(
+                    title: widget.title,
+                    subtitle: widget.subtitle,
+                    accent: widget.accent,
+                    name: user?.name ?? 'Kullanıcı',
+                    number: user?.number ?? '-',
+                    activeLabel: widget.items[_index].label,
+                    activeIcon: widget.items[_index].icon,
+                    onLogout: _logout,
+                  ),
                 ),
-              ),
-              Expanded(
-                child: PageView(
-                  controller: _pageController,
-                  physics: const BouncingScrollPhysics(),
-                  onPageChanged: (value) {
-                    setState(() => _index = value);
-                  },
-                  children: widget.items.map((x) => x.child).toList(),
+                Expanded(
+                  child: PageView(
+                    controller: _pageController,
+                    physics: const BouncingScrollPhysics(),
+                    onPageChanged: (value) {
+                      setState(() => _index = value);
+                    },
+                    children: widget.items
+                        .map(
+                          (x) => _PremiumPageStage(
+                            accent: widget.accent,
+                            icon: x.icon,
+                            label: x.label,
+                            child: x.child,
+                          ),
+                        )
+                        .toList(),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 104),
-            ],
+                const SizedBox(height: 106),
+              ],
+            ),
           ),
-        ),
+        ],
       ),
       bottomNavigationBar: _PremiumFloatingDock(
         accent: widget.accent,
@@ -133,12 +140,314 @@ class _PremiumShellState extends State<PremiumShell> {
   }
 }
 
+class _PremiumPageStage extends StatelessWidget {
+  final Color accent;
+  final IconData icon;
+  final String label;
+  final Widget child;
+
+  const _PremiumPageStage({
+    required this.accent,
+    required this.icon,
+    required this.label,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final wide = MediaQuery.sizeOf(context).width >= 760;
+
+    return Padding(
+      padding: EdgeInsets.fromLTRB(wide ? 22 : 12, 0, wide ? 22 : 12, 0),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(wide ? 34 : 28),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.42),
+              borderRadius: BorderRadius.circular(wide ? 34 : 28),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF101828).withValues(alpha: 0.08),
+                  blurRadius: 34,
+                  offset: const Offset(0, 18),
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: CustomPaint(painter: _StageCardPatternPainter(accent)),
+                ),
+                Positioned(
+                  top: 14,
+                  right: 14,
+                  child: _FloatingStageBadge(
+                    accent: accent,
+                    icon: icon,
+                    label: label,
+                  ),
+                ),
+                Positioned(
+                  left: 14,
+                  right: 14,
+                  bottom: 14,
+                  child: IgnorePointer(
+                    child: Row(
+                      children: [
+                        _StageMiniChip(
+                          color: accent,
+                          icon: Icons.layers_rounded,
+                          text: 'Kart görünümü',
+                        ),
+                        const SizedBox(width: 8),
+                        _StageMiniChip(
+                          color: AppTheme.cyan,
+                          icon: Icons.swipe_rounded,
+                          text: 'Kaydırmalı',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                child,
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _StageCardPatternPainter extends CustomPainter {
+  final Color accent;
+
+  const _StageCardPatternPainter(this.accent);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final wash = Paint()
+      ..shader =
+          RadialGradient(
+            colors: [
+              accent.withValues(alpha: 0.12),
+              AppTheme.cyan.withValues(alpha: 0.05),
+              Colors.transparent,
+            ],
+          ).createShader(
+            Rect.fromCircle(
+              center: Offset(size.width * 0.12, size.height * 0.04),
+              radius: size.width * 0.9,
+            ),
+          );
+
+    canvas.drawRect(Offset.zero & size, wash);
+
+    final cardPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.34)
+      ..style = PaintingStyle.fill;
+
+    final borderPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.42)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    final rects = [
+      Rect.fromLTWH(size.width - 126, 72, 98, 58),
+      Rect.fromLTWH(22, size.height - 112, 104, 58),
+      Rect.fromLTWH(size.width - 156, size.height - 88, 126, 52),
+    ];
+
+    for (final rect in rects) {
+      final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(20));
+      canvas.drawRRect(rrect, cardPaint);
+      canvas.drawRRect(rrect, borderPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _StageCardPatternPainter oldDelegate) {
+    return oldDelegate.accent != accent;
+  }
+}
+
+class _FloatingStageBadge extends StatelessWidget {
+  final Color accent;
+  final IconData icon;
+  final String label;
+
+  const _FloatingStageBadge({
+    required this.accent,
+    required this.icon,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return IgnorePointer(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.86),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: Colors.white),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF101828).withValues(alpha: 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: accent, size: 16),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: TextStyle(
+                color: accent,
+                fontWeight: FontWeight.w900,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StageMiniChip extends StatelessWidget {
+  final Color color;
+  final IconData icon;
+  final String text;
+
+  const _StageMiniChip({
+    required this.color,
+    required this.icon,
+    required this.text,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.62),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.80)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 14),
+          const SizedBox(width: 5),
+          Text(
+            text,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w900,
+              fontSize: 10.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ShellBackdrop extends StatelessWidget {
+  final Color accent;
+
+  const _ShellBackdrop({required this.accent});
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Color.lerp(accent, Colors.white, 0.78)!,
+            const Color(0xFFF7F9FC),
+            const Color(0xFFEEF4FF),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: CustomPaint(
+        painter: _ShellPatternPainter(accent),
+        child: const SizedBox.expand(),
+      ),
+    );
+  }
+}
+
+class _ShellPatternPainter extends CustomPainter {
+  final Color accent;
+
+  const _ShellPatternPainter(this.accent);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final topPaint = Paint()
+      ..shader = LinearGradient(
+        colors: [
+          accent.withValues(alpha: 0.14),
+          AppTheme.cyan.withValues(alpha: 0.08),
+          Colors.transparent,
+        ],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height * 0.48));
+
+    final topPath = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width, size.height * 0.22)
+      ..quadraticBezierTo(
+        size.width * 0.58,
+        size.height * 0.34,
+        0,
+        size.height * 0.24,
+      )
+      ..close();
+
+    canvas.drawPath(topPath, topPaint);
+
+    final linePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.38)
+      ..strokeWidth = 1;
+
+    const gap = 34.0;
+    for (double x = -size.height; x < size.width; x += gap) {
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(x + size.height * 0.42, size.height * 0.42),
+        linePaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _ShellPatternPainter oldDelegate) {
+    return oldDelegate.accent != accent;
+  }
+}
+
 class _PremiumHeader extends StatelessWidget {
   final String title;
   final String subtitle;
   final Color accent;
   final String name;
   final String number;
+  final String activeLabel;
+  final IconData activeIcon;
   final VoidCallback onLogout;
 
   const _PremiumHeader({
@@ -147,6 +456,8 @@ class _PremiumHeader extends StatelessWidget {
     required this.accent,
     required this.name,
     required this.number,
+    required this.activeLabel,
+    required this.activeIcon,
     required this.onLogout,
   });
 
@@ -156,25 +467,20 @@ class _PremiumHeader extends StatelessWidget {
     final compact = width < 430;
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(30),
+      borderRadius: BorderRadius.circular(compact ? 26 : 30),
       child: BackdropFilter(
-        filter: ImageFilter.blur(
-          sigmaX: 18,
-          sigmaY: 18,
-        ),
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
         child: Container(
-          padding: EdgeInsets.all(compact ? 13 : 16),
+          padding: EdgeInsets.all(compact ? 13 : 17),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.88),
-            borderRadius: BorderRadius.circular(30),
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.95),
-            ),
+            color: Colors.white.withValues(alpha: 0.90),
+            borderRadius: BorderRadius.circular(compact ? 26 : 30),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.98)),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.055),
-                blurRadius: 26,
-                offset: const Offset(0, 14),
+                color: const Color(0xFF101828).withValues(alpha: 0.09),
+                blurRadius: 34,
+                offset: const Offset(0, 18),
               ),
             ],
           ),
@@ -185,43 +491,50 @@ class _PremiumHeader extends StatelessWidget {
                 height: compact ? 48 : 56,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [
-                      accent,
-                      AppTheme.cyan,
-                    ],
+                    colors: [accent, AppTheme.cyan, AppTheme.green],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(21),
+                  borderRadius: BorderRadius.circular(compact ? 18 : 21),
                   boxShadow: [
                     BoxShadow(
-                      color: accent.withValues(alpha: 0.25),
-                      blurRadius: 22,
+                      color: accent.withValues(alpha: 0.28),
+                      blurRadius: 24,
                       offset: const Offset(0, 12),
                     ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.auto_awesome_rounded,
-                  color: Colors.white,
-                  size: 27,
-                ),
+                child: Icon(activeIcon, color: Colors.white, size: 27),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: AppTheme.dark,
-                        fontWeight: FontWeight.w900,
-                        fontSize: compact ? 18 : 21,
-                        letterSpacing: -0.7,
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: AppTheme.dark,
+                              fontWeight: FontWeight.w900,
+                              fontSize: compact ? 18 : 21,
+                              letterSpacing: 0,
+                            ),
+                          ),
+                        ),
+                        if (!compact) ...[
+                          const SizedBox(width: 8),
+                          _HeaderPill(
+                            text: activeLabel,
+                            icon: Icons.auto_awesome_rounded,
+                            color: accent,
+                          ),
+                        ],
+                      ],
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -246,11 +559,14 @@ class _PremiumHeader extends StatelessWidget {
                     vertical: 9,
                   ),
                   decoration: BoxDecoration(
-                    color: accent.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(
-                      color: accent.withValues(alpha: 0.14),
+                    gradient: LinearGradient(
+                      colors: [
+                        accent.withValues(alpha: 0.12),
+                        AppTheme.cyan.withValues(alpha: 0.08),
+                      ],
                     ),
+                    borderRadius: BorderRadius.circular(17),
+                    border: Border.all(color: accent.withValues(alpha: 0.16)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -290,12 +606,15 @@ class _PremiumHeader extends StatelessWidget {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEF4444).withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(18),
+                      color: AppTheme.red.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppTheme.red.withValues(alpha: 0.12),
+                      ),
                     ),
                     child: const Icon(
                       Icons.logout_rounded,
-                      color: Color(0xFFEF4444),
+                      color: AppTheme.red,
                       size: 21,
                     ),
                   ),
@@ -304,6 +623,45 @@ class _PremiumHeader extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _HeaderPill extends StatelessWidget {
+  final String text;
+  final IconData icon;
+  final Color color;
+
+  const _HeaderPill({
+    required this.text,
+    required this.icon,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withValues(alpha: 0.14)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 14),
+          const SizedBox(width: 5),
+          Text(
+            text,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w900,
+              fontSize: 11,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -328,36 +686,26 @@ class _PremiumFloatingDock extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
 
     final compact = width < 390;
-    final dockHeight = compact ? 76.0 : 82.0;
+    final dockHeight = compact ? 78.0 : 84.0;
     final horizontalPadding = compact ? 8.0 : 10.0;
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-        12,
-        0,
-        12,
-        bottomSafe > 0 ? 8 : 12,
-      ),
+      padding: EdgeInsets.fromLTRB(12, 0, 12, bottomSafe > 0 ? 8 : 12),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(28),
         child: BackdropFilter(
-          filter: ImageFilter.blur(
-            sigmaX: 22,
-            sigmaY: 22,
-          ),
+          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
           child: Container(
             height: dockHeight,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.92),
-              borderRadius: BorderRadius.circular(32),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.98),
-              ),
+              color: Colors.white.withValues(alpha: 0.94),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.98)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.12),
-                  blurRadius: 30,
-                  offset: const Offset(0, 16),
+                  color: const Color(0xFF101828).withValues(alpha: 0.15),
+                  blurRadius: 34,
+                  offset: const Offset(0, 18),
                 ),
               ],
             ),
@@ -428,7 +776,7 @@ class _DockItem extends StatelessWidget {
               )
             : null,
         color: selected ? null : Colors.transparent,
-        borderRadius: BorderRadius.circular(25),
+        borderRadius: BorderRadius.circular(21),
         border: Border.all(
           color: selected ? accent.withValues(alpha: 0.18) : Colors.transparent,
         ),
@@ -437,7 +785,7 @@ class _DockItem extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(25),
+          borderRadius: BorderRadius.circular(21),
           child: Padding(
             padding: EdgeInsets.symmetric(
               horizontal: compact ? 3 : 5,
@@ -448,21 +796,18 @@ class _DockItem extends StatelessWidget {
               children: [
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 230),
-                  width: compact ? 31 : 34,
-                  height: compact ? 31 : 34,
+                  width: compact ? 32 : 36,
+                  height: compact ? 32 : 36,
                   decoration: BoxDecoration(
                     gradient: selected
                         ? LinearGradient(
-                            colors: [
-                              accent,
-                              AppTheme.cyan,
-                            ],
+                            colors: [accent, AppTheme.cyan, AppTheme.green],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           )
                         : null,
                     color: selected ? null : const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(13),
                     boxShadow: selected
                         ? [
                             BoxShadow(
@@ -489,7 +834,7 @@ class _DockItem extends StatelessWidget {
                     style: TextStyle(
                       color: selected ? accent : inactiveColor,
                       fontWeight: FontWeight.w900,
-                      fontSize: compact ? 9.2 : 10.4,
+                      fontSize: compact ? 9.0 : 10.2,
                       height: 1.0,
                     ),
                   ),
@@ -531,10 +876,7 @@ class PremiumPlaceholderPage extends StatelessWidget {
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  accent,
-                  AppTheme.cyan,
-                ],
+                colors: [accent, AppTheme.cyan],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
               ),
@@ -556,11 +898,7 @@ class PremiumPlaceholderPage extends StatelessWidget {
                     color: Colors.white.withValues(alpha: 0.18),
                     borderRadius: BorderRadius.circular(24),
                   ),
-                  child: Icon(
-                    icon,
-                    color: Colors.white,
-                    size: 34,
-                  ),
+                  child: Icon(icon, color: Colors.white, size: 34),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -573,7 +911,7 @@ class PremiumPlaceholderPage extends StatelessWidget {
                           color: Colors.white,
                           fontWeight: FontWeight.w900,
                           fontSize: 24,
-                          letterSpacing: -0.7,
+                          letterSpacing: 0,
                         ),
                       ),
                       const SizedBox(height: 6),
@@ -601,9 +939,7 @@ class PremiumPlaceholderPage extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(28),
                 boxShadow: AppTheme.softShadow,
-                border: Border.all(
-                  color: const Color(0xFFE2E8F0),
-                ),
+                border: Border.all(color: AppTheme.line),
               ),
               child: Row(
                 children: [
@@ -614,10 +950,7 @@ class PremiumPlaceholderPage extends StatelessWidget {
                       color: accent.withValues(alpha: 0.11),
                       borderRadius: BorderRadius.circular(18),
                     ),
-                    child: Icon(
-                      Icons.auto_awesome_rounded,
-                      color: accent,
-                    ),
+                    child: Icon(Icons.auto_awesome_rounded, color: accent),
                   ),
                   const SizedBox(width: 13),
                   Expanded(

@@ -40,10 +40,7 @@ class AnnouncementsPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _AnnouncementsHero(
-                count: announcements.length,
-                accent: accent,
-              ),
+              _AnnouncementsHero(count: announcements.length, accent: accent),
               const SizedBox(height: 16),
               if (announcements.isEmpty)
                 _EmptyAnnouncements(accent: accent)
@@ -51,10 +48,7 @@ class AnnouncementsPage extends StatelessWidget {
                 ...announcements.map(
                   (item) => Padding(
                     padding: const EdgeInsets.only(bottom: 13),
-                    child: _AnnouncementCard(
-                      item: item,
-                      accent: accent,
-                    ),
+                    child: _AnnouncementCard(item: item, accent: accent),
                   ),
                 ),
             ],
@@ -69,10 +63,7 @@ class _AnnouncementsHero extends StatelessWidget {
   final int count;
   final Color accent;
 
-  const _AnnouncementsHero({
-    required this.count,
-    required this.accent,
-  });
+  const _AnnouncementsHero({required this.count, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -81,10 +72,7 @@ class _AnnouncementsHero extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [
-            accent,
-            AppTheme.cyan,
-          ],
+          colors: [accent, AppTheme.cyan],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -123,7 +111,7 @@ class _AnnouncementsHero extends StatelessWidget {
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
                     fontSize: 25,
-                    letterSpacing: -0.7,
+                    letterSpacing: 0,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -151,10 +139,7 @@ class _AnnouncementCard extends StatelessWidget {
   final AnnouncementModel item;
   final Color accent;
 
-  const _AnnouncementCard({
-    required this.item,
-    required this.accent,
-  });
+  const _AnnouncementCard({required this.item, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -168,9 +153,7 @@ class _AnnouncementCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
@@ -185,10 +168,7 @@ class _AnnouncementCard extends StatelessWidget {
                   color: accent.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(18),
                 ),
-                child: Icon(
-                  Icons.notifications_active_rounded,
-                  color: accent,
-                ),
+                child: Icon(Icons.notifications_active_rounded, color: accent),
               ),
               const SizedBox(width: 13),
               Expanded(
@@ -201,7 +181,7 @@ class _AnnouncementCard extends StatelessWidget {
                         color: AppTheme.dark,
                         fontWeight: FontWeight.w900,
                         fontSize: 16,
-                        letterSpacing: -0.2,
+                        letterSpacing: 0,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -225,9 +205,7 @@ class _AnnouncementCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFFE2E8F0),
-              ),
+              border: Border.all(color: AppTheme.line),
             ),
             child: Text(
               item.content,
@@ -276,10 +254,7 @@ class _MiniChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 11,
-        vertical: 8,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
       decoration: BoxDecoration(
         color: accent.withValues(alpha: 0.10),
         borderRadius: BorderRadius.circular(999),
@@ -287,11 +262,7 @@ class _MiniChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: accent,
-            size: 15,
-          ),
+          Icon(icon, color: accent, size: 15),
           const SizedBox(width: 6),
           Text(
             text,
@@ -310,9 +281,7 @@ class _MiniChip extends StatelessWidget {
 class _EmptyAnnouncements extends StatelessWidget {
   final Color accent;
 
-  const _EmptyAnnouncements({
-    required this.accent,
-  });
+  const _EmptyAnnouncements({required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -322,9 +291,7 @@ class _EmptyAnnouncements extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(30),
-        border: Border.all(
-          color: const Color(0xFFE2E8F0),
-        ),
+        border: Border.all(color: AppTheme.line),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
@@ -349,7 +316,7 @@ class _EmptyAnnouncements extends StatelessWidget {
               color: AppTheme.dark,
               fontWeight: FontWeight.w900,
               fontSize: 20,
-              letterSpacing: -0.4,
+              letterSpacing: 0,
             ),
           ),
           const SizedBox(height: 7),
@@ -373,9 +340,7 @@ class _LoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: CircularProgressIndicator(),
-    );
+    return const Center(child: CircularProgressIndicator());
   }
 }
 
@@ -383,10 +348,7 @@ class _ErrorView extends StatelessWidget {
   final String message;
   final Color accent;
 
-  const _ErrorView({
-    required this.message,
-    required this.accent,
-  });
+  const _ErrorView({required this.message, required this.accent});
 
   @override
   Widget build(BuildContext context) {
@@ -402,11 +364,7 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.error_outline_rounded,
-              color: accent,
-              size: 38,
-            ),
+            Icon(Icons.error_outline_rounded, color: accent, size: 38),
             const SizedBox(height: 12),
             Text(
               message,

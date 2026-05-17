@@ -1,10 +1,11 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../core/app_helpers.dart';
 import '../../core/app_theme.dart';
 import '../../models/app_user.dart';
 import '../../services/admin_user_service.dart';
+import '../../widgets/app_confirm_dialog.dart';
 
 class AdminUsersPage extends StatefulWidget {
   final Color accent;
@@ -17,14 +18,30 @@ class AdminUsersPage extends StatefulWidget {
 
 class _AdminUsersPageState extends State<AdminUsersPage> {
   final AdminUserService _service = AdminUserService();
+  final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocus = FocusNode();
 
+  late final Stream<List<AppUser>> _usersStream;
   String _search = '';
   String _roleFilter = 'Tümü';
 
   @override
+  void initState() {
+    super.initState();
+    _usersStream = _service.watchUsers();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _searchFocus.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return StreamBuilder<List<AppUser>>(
-      stream: _service.watchUsers(),
+      stream: _usersStream,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
@@ -54,10 +71,16 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
               const SizedBox(height: 14),
               _SearchAndFilter(
                 accent: widget.accent,
-                search: _search,
+                searchController: _searchController,
+                searchFocus: _searchFocus,
                 roleFilter: _roleFilter,
                 onSearchChanged: (value) {
                   setState(() => _search = value);
+                },
+                onSearchCleared: () {
+                  _searchController.clear();
+                  setState(() => _search = '');
+                  _searchFocus.requestFocus();
                 },
                 onRoleChanged: (value) {
                   setState(() => _roleFilter = value);
@@ -120,27 +143,15 @@ class _AdminUsersPageState extends State<AdminUsersPage> {
   }
 
   Future<void> _confirmDelete(AppUser user) async {
-    final ok = await showDialog<bool>(
+    final ok = await showAppConfirmDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Kullanıcı silinsin mi?'),
-          content: Text('${user.name} adlı kullanıcı pasif hale getirilecek.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Vazgeç'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Sil'),
-            ),
-          ],
-        );
-      },
+      title: 'Kullanıcı pasife alınsın mı?',
+      message:
+          '${user.name} artık listelerde ve girişlerde aktif görünmeyecek. İstersen daha sonra kaydı tekrar düzenleyebilirsin.',
+      confirmText: 'Pasife Al',
     );
 
-    if (ok != true) {
+    if (!ok) {
       return;
     }
 
@@ -265,16 +276,20 @@ class _Hero extends StatelessWidget {
 
 class _SearchAndFilter extends StatelessWidget {
   final Color accent;
-  final String search;
+  final TextEditingController searchController;
+  final FocusNode searchFocus;
   final String roleFilter;
   final ValueChanged<String> onSearchChanged;
+  final VoidCallback onSearchCleared;
   final ValueChanged<String> onRoleChanged;
 
   const _SearchAndFilter({
     required this.accent,
-    required this.search,
+    required this.searchController,
+    required this.searchFocus,
     required this.roleFilter,
     required this.onSearchChanged,
+    required this.onSearchCleared,
     required this.onRoleChanged,
   });
 
@@ -293,11 +308,21 @@ class _SearchAndFilter extends StatelessWidget {
       child: Column(
         children: [
           TextField(
+            controller: searchController,
+            focusNode: searchFocus,
             onChanged: onSearchChanged,
-            decoration: const InputDecoration(
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
               labelText: 'Ara',
               hintText: 'Ad, numara, sınıf, branş...',
-              prefixIcon: Icon(Icons.search_rounded),
+              prefixIcon: const Icon(Icons.search_rounded),
+              suffixIcon: searchController.text.isEmpty
+                  ? null
+                  : IconButton(
+                      tooltip: 'Aramayı temizle',
+                      onPressed: onSearchCleared,
+                      icon: const Icon(Icons.close_rounded),
+                    ),
             ),
           ),
           const SizedBox(height: 12),

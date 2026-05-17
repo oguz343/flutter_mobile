@@ -1,11 +1,8 @@
-import 'dart:convert';
-import 'dart:typed_data';
-
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:crypto/crypto.dart';
 
 import '../core/app_helpers.dart';
 import '../models/app_user.dart';
+import 'password_hash_verifier.dart';
 
 class AuthException implements Exception {
   final String message;
@@ -27,7 +24,6 @@ class AuthService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   static const String _adminNumber = '0000';
-  static const String _adminPassword = 'admin123';
 
   Future<LoginResult> login({
     required String role,
@@ -74,14 +70,17 @@ class AuthService {
       Bu kayıt yoksa zaten yukarıda user == null olur ve giriş yapmaz.
       Yani kayıtsız/hayali admin girişi yok.
     */
-    if (roleKey == 'admin' &&
+    final adminSystemPasswordMatches =
+        roleKey == 'admin' &&
         cleanNumberDigits == _adminNumber &&
-        cleanPassword == _adminPassword) {
+        await _adminSystemPasswordMatches(cleanPassword);
+
+    if (adminSystemPasswordMatches) {
       return LoginResult(
         user: user.copyWith(
           role: 'Admin',
           number: _adminNumber,
-          password: _adminPassword,
+          password: '',
           mustChangePassword: false,
           activationCode: '',
         ),
@@ -94,7 +93,7 @@ class AuthService {
         AppHelpers.normalizeKey(user.activationCode) ==
             AppHelpers.normalizeKey(cleanPassword);
 
-    final passwordMatches = _passwordMatches(
+    final passwordMatches = await _passwordMatches(
       storedPassword: user.password,
       enteredPassword: cleanPassword,
     );
@@ -120,10 +119,10 @@ class AuthService {
     throw const AuthException('Şifre hatalı. Bilgilerinizi kontrol edin.');
   }
 
-  bool _passwordMatches({
+  Future<bool> _passwordMatches({
     required String storedPassword,
     required String enteredPassword,
-  }) {
+  }) async {
     final stored = storedPassword.trim();
     final entered = enteredPassword.trim();
 
@@ -131,7 +130,7 @@ class AuthService {
       return false;
     }
 
-    if (_verifyPbkdf2Password(entered, stored)) {
+    if (await verifyPbkdf2Password(entered, stored)) {
       return true;
     }
 
@@ -146,84 +145,39 @@ class AuthService {
     return false;
   }
 
-  bool _verifyPbkdf2Password(String enteredPassword, String storedHash) {
-    const prefix = 'PBKDF2_V1';
-    final parts = storedHash.split(r'$');
-
-    if (parts.length != 4 || parts.first != prefix) {
-      return false;
-    }
-
-    final iterations = int.tryParse(parts[1]);
-
-    if (iterations == null || iterations <= 0) {
-      return false;
-    }
-
+  Future<bool> _adminSystemPasswordMatches(String enteredPassword) async {
     try {
-      final salt = base64Decode(parts[2]);
-      final expectedHash = base64Decode(parts[3]);
-      final actualHash = _pbkdf2Sha256(
-        password: utf8.encode(enteredPassword),
-        salt: salt,
-        iterations: iterations,
-        length: expectedHash.length,
-      );
+      final doc = await _db.collection('system').doc('admin_account').get();
 
-      return _constantTimeEquals(actualHash, expectedHash);
+      if (!doc.exists) {
+        return enteredPassword == 'admin123';
+      }
+
+      final data = doc.data() ?? <String, dynamic>{};
+      final storedPassword = AppHelpers.getText(data, [
+        'passwordHash',
+        'PasswordHash',
+        'password',
+        'Password',
+        'adminPassword',
+        'AdminPassword',
+        'sifre',
+        'Sifre',
+        'ÅŸifre',
+        'Åifre',
+      ]);
+
+      if (storedPassword.trim().isEmpty) {
+        return enteredPassword == 'admin123';
+      }
+
+      return await _passwordMatches(
+        storedPassword: storedPassword,
+        enteredPassword: enteredPassword,
+      );
     } catch (_) {
       return false;
     }
-  }
-
-  Uint8List _pbkdf2Sha256({
-    required List<int> password,
-    required List<int> salt,
-    required int iterations,
-    required int length,
-  }) {
-    final hmac = Hmac(sha256, password);
-    final blockCount = (length / hmac.convert(<int>[]).bytes.length).ceil();
-    final output = BytesBuilder(copy: false);
-
-    for (var blockIndex = 1; blockIndex <= blockCount; blockIndex++) {
-      final blockSalt = <int>[
-        ...salt,
-        (blockIndex >> 24) & 0xff,
-        (blockIndex >> 16) & 0xff,
-        (blockIndex >> 8) & 0xff,
-        blockIndex & 0xff,
-      ];
-
-      var u = hmac.convert(blockSalt).bytes;
-      final block = List<int>.from(u);
-
-      for (var i = 1; i < iterations; i++) {
-        u = hmac.convert(u).bytes;
-
-        for (var j = 0; j < block.length; j++) {
-          block[j] ^= u[j];
-        }
-      }
-
-      output.add(block);
-    }
-
-    return Uint8List.fromList(output.toBytes().take(length).toList());
-  }
-
-  bool _constantTimeEquals(List<int> a, List<int> b) {
-    if (a.length != b.length) {
-      return false;
-    }
-
-    var diff = 0;
-
-    for (var i = 0; i < a.length; i++) {
-      diff |= a[i] ^ b[i];
-    }
-
-    return diff == 0;
   }
 
   Future<AppUser?> findUserByRoleAndNumber({

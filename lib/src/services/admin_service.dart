@@ -7,6 +7,7 @@ import '../models/announcement_model.dart';
 import '../models/app_user.dart';
 import '../models/lesson_model.dart';
 import '../models/submission_model.dart';
+import 'password_hash_verifier.dart';
 
 class PasswordRequestModel {
   final String id;
@@ -65,6 +66,15 @@ class PasswordRequestModel {
       createdAt: AppHelpers.getDate(data, ['createdAt', 'CreatedAt']),
     );
   }
+}
+
+class AdminServiceException implements Exception {
+  final String message;
+
+  const AdminServiceException(this.message);
+
+  @override
+  String toString() => message;
 }
 
 class SchoolClassModel {
@@ -152,6 +162,163 @@ class AdminDashboardBundle {
 
 class AdminService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+
+  Future<void> changeAdminPassword({
+    required String currentPassword,
+    required String newPassword,
+    required String repeatPassword,
+  }) async {
+    final current = currentPassword.trim();
+    final next = newPassword.trim();
+    final repeat = repeatPassword.trim();
+
+    if (current.isEmpty) {
+      throw const AdminServiceException('Mevcut şifre boş bırakılamaz.');
+    }
+
+    if (next.isEmpty) {
+      throw const AdminServiceException('Yeni şifre boş bırakılamaz.');
+    }
+
+    if (next.length < 6) {
+      throw const AdminServiceException('Yeni şifre en az 6 karakter olmalı.');
+    }
+
+    if (next != repeat) {
+      throw const AdminServiceException('Yeni şifreler eşleşmiyor.');
+    }
+
+    final adminDoc = await _findAdminUserDoc();
+
+    if (adminDoc == null) {
+      throw const AdminServiceException('Admin kullanıcısı bulunamadı.');
+    }
+
+    final currentOk = await _verifyAdminCurrentPassword(adminDoc, current);
+
+    if (!currentOk) {
+      throw const AdminServiceException('Mevcut şifre hatalı.');
+    }
+
+    final now = Timestamp.now();
+    final newHash = await hashPbkdf2Password(next);
+
+    await adminDoc.reference.set({
+      'passwordHash': newHash,
+      'PasswordHash': newHash,
+      'password': '',
+      'Password': '',
+      'mustChangePassword': false,
+      'MustChangePassword': false,
+      'updatedAt': now,
+      'UpdatedAt': now,
+    }, SetOptions(merge: true));
+
+    await _db.collection('system').doc('admin_account').set({
+      'number': '0000',
+      'password': '',
+      'passwordHash': newHash,
+      'updatedAt': now,
+    }, SetOptions(merge: true));
+  }
+
+  Future<DocumentSnapshot<Map<String, dynamic>>?> _findAdminUserDoc() async {
+    final snapshot = await _db.collection('users').get();
+
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+
+      if (AppHelpers.isDeleted(data)) {
+        continue;
+      }
+
+      final role = AppHelpers.normalizeKey(
+        AppHelpers.getText(data, ['role', 'Role', 'userRole', 'UserRole']),
+      );
+
+      final number = AppHelpers.onlyDigits(
+        AppHelpers.getText(data, [
+          'number',
+          'Number',
+          'schoolNo',
+          'SchoolNo',
+          'adminNo',
+          'AdminNo',
+        ]),
+      );
+
+      if (role == 'admin' || number == '0000') {
+        return doc;
+      }
+    }
+
+    return null;
+  }
+
+  Future<bool> _verifyAdminCurrentPassword(
+    DocumentSnapshot<Map<String, dynamic>> adminDoc,
+    String password,
+  ) async {
+    final data = adminDoc.data() ?? <String, dynamic>{};
+    final stored = AppHelpers.getText(data, [
+      'passwordHash',
+      'PasswordHash',
+      'hash',
+      'Hash',
+      'password',
+      'Password',
+    ]);
+
+    if (await _passwordMatches(stored, password)) {
+      return true;
+    }
+
+    return _systemAdminPasswordMatches(password);
+  }
+
+  Future<bool> _systemAdminPasswordMatches(String password) async {
+    final doc = await _db.collection('system').doc('admin_account').get();
+
+    if (!doc.exists) {
+      return password == 'admin123';
+    }
+
+    final data = doc.data() ?? <String, dynamic>{};
+    final stored = AppHelpers.getText(data, [
+      'passwordHash',
+      'PasswordHash',
+      'password',
+      'Password',
+      'adminPassword',
+      'AdminPassword',
+      'sifre',
+      'Sifre',
+      'şifre',
+      'Şifre',
+    ]);
+
+    if (stored.trim().isEmpty) {
+      return password == 'admin123';
+    }
+
+    return _passwordMatches(stored, password);
+  }
+
+  Future<bool> _passwordMatches(String storedPassword, String entered) async {
+    final stored = storedPassword.trim();
+    final password = entered.trim();
+
+    if (stored.isEmpty || password.isEmpty) {
+      return false;
+    }
+
+    if (await verifyPbkdf2Password(password, stored)) {
+      return true;
+    }
+
+    return stored == password ||
+        AppHelpers.normalizeKey(stored) == AppHelpers.normalizeKey(password);
+  }
 
   Stream<AdminDashboardBundle> watchDashboard() {
     final controller = StreamController<AdminDashboardBundle>();

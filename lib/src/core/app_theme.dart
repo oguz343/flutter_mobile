@@ -14,22 +14,17 @@ class AppTheme {
 
   static List<BoxShadow> get softShadow => [
     BoxShadow(
-      color: const Color(0xFF101828).withValues(alpha: 0.07),
-      blurRadius: 30,
-      offset: const Offset(0, 16),
-    ),
-    BoxShadow(
-      color: Colors.white.withValues(alpha: 0.82),
-      blurRadius: 1,
-      offset: const Offset(0, 1),
+      color: const Color(0xFF101828).withValues(alpha: 0.045),
+      blurRadius: 18,
+      offset: const Offset(0, 8),
     ),
   ];
 
   static List<BoxShadow> coloredShadow(Color color) => [
     BoxShadow(
-      color: color.withValues(alpha: 0.20),
-      blurRadius: 32,
-      offset: const Offset(0, 16),
+      color: color.withValues(alpha: 0.16),
+      blurRadius: 22,
+      offset: const Offset(0, 10),
     ),
   ];
 

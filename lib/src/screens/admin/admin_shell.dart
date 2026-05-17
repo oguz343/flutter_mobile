@@ -5,6 +5,7 @@ import 'admin_announcements_page.dart';
 import 'admin_classes_lessons_page.dart';
 import 'admin_dashboard_page.dart';
 import 'admin_excel_import_page.dart';
+import 'admin_password_page.dart';
 import 'admin_password_requests_page.dart';
 import 'admin_users_page.dart';
 
@@ -49,6 +50,11 @@ class AdminShell extends StatelessWidget {
           label: 'Talepler',
           icon: Icons.lock_reset_rounded,
           child: AdminPasswordRequestsPage(accent: accent),
+        ),
+        PremiumShellItem(
+          label: 'Şifre',
+          icon: Icons.security_rounded,
+          child: AdminPasswordPage(accent: accent),
         ),
       ],
     );

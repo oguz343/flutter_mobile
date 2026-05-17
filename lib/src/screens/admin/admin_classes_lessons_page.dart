@@ -1,9 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/app_theme.dart';
 import '../../models/app_user.dart';
 import '../../models/lesson_model.dart';
 import '../../services/admin_school_service.dart';
+import '../../widgets/app_confirm_dialog.dart';
 import '../../services/admin_service.dart';
 
 class AdminClassesLessonsPage extends StatelessWidget {
@@ -167,27 +168,16 @@ class AdminClassesLessonsPage extends StatelessWidget {
     required SchoolClassModel item,
     required AdminSchoolService service,
   }) async {
-    final ok = await showDialog<bool>(
+    final ok = await showAppConfirmDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Sınıf silinsin mi?'),
-          content: Text('${item.name} sınıfı pasif hale getirilecek.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Vazgeç'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Sil'),
-            ),
-          ],
-        );
-      },
+      title: 'Sınıf pasife alınsın mı?',
+      message:
+          '${item.name} sınıfı listelerde aktif görünmeyecek. Bu işlem sınıf kaydını kalıcı olarak yok etmez.',
+      confirmText: 'Pasife Al',
+      icon: Icons.apartment_rounded,
     );
 
-    if (ok != true) {
+    if (!ok) {
       return;
     }
 
@@ -199,27 +189,16 @@ class AdminClassesLessonsPage extends StatelessWidget {
     required LessonModel item,
     required AdminSchoolService service,
   }) async {
-    final ok = await showDialog<bool>(
+    final ok = await showAppConfirmDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Ders silinsin mi?'),
-          content: Text('${item.name} dersi pasif hale getirilecek.'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('Vazgeç'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Sil'),
-            ),
-          ],
-        );
-      },
+      title: 'Ders pasife alınsın mı?',
+      message:
+          '${item.name} dersi aktif ders listesinde görünmeyecek. Bağlı geçmiş kayıtlar korunur.',
+      confirmText: 'Pasife Al',
+      icon: Icons.menu_book_rounded,
     );
 
-    if (ok != true) {
+    if (!ok) {
       return;
     }
 

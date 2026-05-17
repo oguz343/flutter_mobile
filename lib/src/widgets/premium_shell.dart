@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../core/app_session.dart';
@@ -15,6 +13,25 @@ class PremiumShellItem {
     required this.icon,
     required this.child,
   });
+}
+
+class PremiumShellNavigator extends InheritedWidget {
+  final Future<void> Function(int index) goTo;
+
+  const PremiumShellNavigator({
+    super.key,
+    required this.goTo,
+    required super.child,
+  });
+
+  static PremiumShellNavigator? maybeOf(BuildContext context) {
+    return context.dependOnInheritedWidgetOfExactType<PremiumShellNavigator>();
+  }
+
+  @override
+  bool updateShouldNotify(covariant PremiumShellNavigator oldWidget) {
+    return oldWidget.goTo != goTo;
+  }
 }
 
 class PremiumShell extends StatefulWidget {
@@ -65,9 +82,31 @@ class _PremiumShellState extends State<PremiumShell> {
     );
   }
 
-  void _logout() {
-    AppSession.clear();
+  Future<void> _logout() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Çıkış yapılsın mı?'),
+        content: const Text('Oturum kapatılacak ve giriş ekranına dönülecek.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Vazgeç'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.of(context).pop(true),
+            icon: const Icon(Icons.logout_rounded),
+            label: const Text('Çıkış Yap'),
+          ),
+        ],
+      ),
+    );
 
+    if (ok != true || !mounted) {
+      return;
+    }
+
+    AppSession.clear();
     Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
   }
 
@@ -77,8 +116,10 @@ class _PremiumShellState extends State<PremiumShell> {
     final size = MediaQuery.sizeOf(context);
     final wide = size.width >= 760;
 
-    return Scaffold(
-      extendBody: true,
+    return PremiumShellNavigator(
+      goTo: _goTo,
+      child: Scaffold(
+      extendBody: false,
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
@@ -108,23 +149,15 @@ class _PremiumShellState extends State<PremiumShell> {
                 Expanded(
                   child: PageView(
                     controller: _pageController,
-                    physics: const BouncingScrollPhysics(),
+                    physics: const ClampingScrollPhysics(),
                     onPageChanged: (value) {
                       setState(() => _index = value);
                     },
                     children: widget.items
-                        .map(
-                          (x) => _PremiumPageStage(
-                            accent: widget.accent,
-                            icon: x.icon,
-                            label: x.label,
-                            child: x.child,
-                          ),
-                        )
+                        .map((x) => _PremiumPageStage(child: x.child))
                         .toList(),
                   ),
                 ),
-                const SizedBox(height: 106),
               ],
             ),
           ),
@@ -136,227 +169,23 @@ class _PremiumShellState extends State<PremiumShell> {
         selectedIndex: _index,
         onTap: _goTo,
       ),
+      ),
     );
   }
 }
 
 class _PremiumPageStage extends StatelessWidget {
-  final Color accent;
-  final IconData icon;
-  final String label;
   final Widget child;
 
-  const _PremiumPageStage({
-    required this.accent,
-    required this.icon,
-    required this.label,
-    required this.child,
-  });
+  const _PremiumPageStage({required this.child});
 
   @override
   Widget build(BuildContext context) {
     final wide = MediaQuery.sizeOf(context).width >= 760;
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(wide ? 22 : 12, 0, wide ? 22 : 12, 0),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(wide ? 34 : 28),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-          child: Container(
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.42),
-              borderRadius: BorderRadius.circular(wide ? 34 : 28),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.72)),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF101828).withValues(alpha: 0.08),
-                  blurRadius: 34,
-                  offset: const Offset(0, 18),
-                ),
-              ],
-            ),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: CustomPaint(painter: _StageCardPatternPainter(accent)),
-                ),
-                Positioned(
-                  top: 14,
-                  right: 14,
-                  child: _FloatingStageBadge(
-                    accent: accent,
-                    icon: icon,
-                    label: label,
-                  ),
-                ),
-                Positioned(
-                  left: 14,
-                  right: 14,
-                  bottom: 14,
-                  child: IgnorePointer(
-                    child: Row(
-                      children: [
-                        _StageMiniChip(
-                          color: accent,
-                          icon: Icons.layers_rounded,
-                          text: 'Kart görünümü',
-                        ),
-                        const SizedBox(width: 8),
-                        _StageMiniChip(
-                          color: AppTheme.cyan,
-                          icon: Icons.swipe_rounded,
-                          text: 'Kaydırmalı',
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                child,
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StageCardPatternPainter extends CustomPainter {
-  final Color accent;
-
-  const _StageCardPatternPainter(this.accent);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final wash = Paint()
-      ..shader =
-          RadialGradient(
-            colors: [
-              accent.withValues(alpha: 0.12),
-              AppTheme.cyan.withValues(alpha: 0.05),
-              Colors.transparent,
-            ],
-          ).createShader(
-            Rect.fromCircle(
-              center: Offset(size.width * 0.12, size.height * 0.04),
-              radius: size.width * 0.9,
-            ),
-          );
-
-    canvas.drawRect(Offset.zero & size, wash);
-
-    final cardPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.34)
-      ..style = PaintingStyle.fill;
-
-    final borderPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.42)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1;
-
-    final rects = [
-      Rect.fromLTWH(size.width - 126, 72, 98, 58),
-      Rect.fromLTWH(22, size.height - 112, 104, 58),
-      Rect.fromLTWH(size.width - 156, size.height - 88, 126, 52),
-    ];
-
-    for (final rect in rects) {
-      final rrect = RRect.fromRectAndRadius(rect, const Radius.circular(20));
-      canvas.drawRRect(rrect, cardPaint);
-      canvas.drawRRect(rrect, borderPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _StageCardPatternPainter oldDelegate) {
-    return oldDelegate.accent != accent;
-  }
-}
-
-class _FloatingStageBadge extends StatelessWidget {
-  final Color accent;
-  final IconData icon;
-  final String label;
-
-  const _FloatingStageBadge({
-    required this.accent,
-    required this.icon,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.86),
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: Colors.white),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFF101828).withValues(alpha: 0.08),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, color: accent, size: 16),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                color: accent,
-                fontWeight: FontWeight.w900,
-                fontSize: 11,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StageMiniChip extends StatelessWidget {
-  final Color color;
-  final IconData icon;
-  final String text;
-
-  const _StageMiniChip({
-    required this.color,
-    required this.icon,
-    required this.text,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.62),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.80)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: color, size: 14),
-          const SizedBox(width: 5),
-          Text(
-            text,
-            style: TextStyle(
-              color: color,
-              fontWeight: FontWeight.w900,
-              fontSize: 10.5,
-            ),
-          ),
-        ],
-      ),
+      padding: EdgeInsets.fromLTRB(wide ? 18 : 8, 0, wide ? 18 : 8, 0),
+      child: child,
     );
   }
 }
@@ -372,9 +201,9 @@ class _ShellBackdrop extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Color.lerp(accent, Colors.white, 0.78)!,
-            const Color(0xFFF7F9FC),
-            const Color(0xFFEEF4FF),
+            Color.lerp(accent, Colors.white, 0.90)!,
+            const Color(0xFFF8FAFC),
+            Colors.white,
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -398,8 +227,8 @@ class _ShellPatternPainter extends CustomPainter {
     final topPaint = Paint()
       ..shader = LinearGradient(
         colors: [
-          accent.withValues(alpha: 0.14),
-          AppTheme.cyan.withValues(alpha: 0.08),
+          accent.withValues(alpha: 0.09),
+          Colors.white.withValues(alpha: 0.00),
           Colors.transparent,
         ],
         begin: Alignment.topLeft,
@@ -420,18 +249,11 @@ class _ShellPatternPainter extends CustomPainter {
 
     canvas.drawPath(topPath, topPaint);
 
-    final linePaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.38)
-      ..strokeWidth = 1;
+    final glowPaint = Paint()
+      ..color = accent.withValues(alpha: 0.045)
+      ..style = PaintingStyle.fill;
 
-    const gap = 34.0;
-    for (double x = -size.height; x < size.width; x += gap) {
-      canvas.drawLine(
-        Offset(x, 0),
-        Offset(x + size.height * 0.42, size.height * 0.42),
-        linePaint,
-      );
-    }
+    canvas.drawCircle(Offset(size.width * 0.88, 96), 116, glowPaint);
   }
 
   @override
@@ -466,163 +288,150 @@ class _PremiumHeader extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
     final compact = width < 430;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(compact ? 26 : 30),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-        child: Container(
-          padding: EdgeInsets.all(compact ? 13 : 17),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.90),
-            borderRadius: BorderRadius.circular(compact ? 26 : 30),
-            border: Border.all(color: Colors.white.withValues(alpha: 0.98)),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFF101828).withValues(alpha: 0.09),
-                blurRadius: 34,
-                offset: const Offset(0, 18),
-              ),
-            ],
+    return Container(
+      padding: EdgeInsets.all(compact ? 12 : 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(compact ? 20 : 22),
+        border: Border.all(color: const Color(0xFFE8EEF7)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF101828).withValues(alpha: 0.055),
+            blurRadius: 18,
+            offset: const Offset(0, 8),
           ),
-          child: Row(
-            children: [
-              Container(
-                width: compact ? 48 : 56,
-                height: compact ? 48 : 56,
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [accent, AppTheme.cyan, AppTheme.green],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(compact ? 18 : 21),
-                  boxShadow: [
-                    BoxShadow(
-                      color: accent.withValues(alpha: 0.28),
-                      blurRadius: 24,
-                      offset: const Offset(0, 12),
-                    ),
-                  ],
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: compact ? 48 : 56,
+            height: compact ? 48 : 56,
+            decoration: BoxDecoration(
+              color: accent,
+              borderRadius: BorderRadius.circular(compact ? 18 : 21),
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: 0.18),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
                 ),
-                child: Icon(activeIcon, color: Colors.white, size: 27),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              ],
+            ),
+            child: Icon(activeIcon, color: Colors.white, size: 27),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: AppTheme.dark,
-                              fontWeight: FontWeight.w900,
-                              fontSize: compact ? 18 : 21,
-                              letterSpacing: 0,
-                            ),
-                          ),
-                        ),
-                        if (!compact) ...[
-                          const SizedBox(width: 8),
-                          _HeaderPill(
-                            text: activeLabel,
-                            icon: Icons.auto_awesome_rounded,
-                            color: accent,
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppTheme.muted,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (!compact) ...[
-                const SizedBox(width: 8),
-                Container(
-                  constraints: const BoxConstraints(maxWidth: 132),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 9,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        accent.withValues(alpha: 0.12),
-                        AppTheme.cyan.withValues(alpha: 0.08),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(17),
-                    border: Border.all(color: accent.withValues(alpha: 0.16)),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        name,
+                    Flexible(
+                      child: Text(
+                        title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppTheme.dark,
                           fontWeight: FontWeight.w900,
-                          fontSize: 12,
+                          fontSize: compact ? 18 : 21,
+                          letterSpacing: 0,
                         ),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'No: $number',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppTheme.muted,
-                          fontWeight: FontWeight.w800,
-                          fontSize: 10.5,
-                        ),
+                    ),
+                    if (!compact) ...[
+                      const SizedBox(width: 8),
+                      _HeaderPill(
+                        text: activeLabel,
+                        icon: Icons.auto_awesome_rounded,
+                        color: accent,
                       ),
                     ],
+                  ],
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  compact ? '$activeLabel • $subtitle' : subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: AppTheme.muted,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12,
                   ),
                 ),
               ],
-              const SizedBox(width: 6),
-              Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: onLogout,
-                  borderRadius: BorderRadius.circular(18),
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: AppTheme.red.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: AppTheme.red.withValues(alpha: 0.12),
-                      ),
-                    ),
-                    child: const Icon(
-                      Icons.logout_rounded,
-                      color: AppTheme.red,
-                      size: 21,
+            ),
+          ),
+          if (!compact) ...[
+            const SizedBox(width: 8),
+            Container(
+              constraints: const BoxConstraints(maxWidth: 132),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    accent.withValues(alpha: 0.12),
+                    AppTheme.cyan.withValues(alpha: 0.08),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(17),
+                border: Border.all(color: accent.withValues(alpha: 0.16)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppTheme.dark,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12,
                     ),
                   ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'No: $number',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppTheme.muted,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 10.5,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(width: 6),
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onLogout,
+              borderRadius: BorderRadius.circular(18),
+              child: Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: AppTheme.red.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppTheme.red.withValues(alpha: 0.12),
+                  ),
+                ),
+                child: const Icon(
+                  Icons.logout_rounded,
+                  color: AppTheme.red,
+                  size: 21,
                 ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -644,7 +453,12 @@ class _HeaderPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
+        gradient: LinearGradient(
+          colors: [
+            color.withValues(alpha: 0.13),
+            AppTheme.cyan.withValues(alpha: 0.08),
+          ],
+        ),
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: color.withValues(alpha: 0.14)),
       ),
@@ -686,55 +500,68 @@ class _PremiumFloatingDock extends StatelessWidget {
     final width = MediaQuery.sizeOf(context).width;
 
     final compact = width < 390;
-    final dockHeight = compact ? 78.0 : 84.0;
-    final horizontalPadding = compact ? 8.0 : 10.0;
+    final scrollable = items.length > 5 || width < 430;
+    final dockHeight = compact ? 76.0 : 82.0;
+    final horizontalPadding = compact ? 7.0 : 9.0;
 
     return Padding(
-      padding: EdgeInsets.fromLTRB(12, 0, 12, bottomSafe > 0 ? 8 : 12),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-          child: Container(
-            height: dockHeight,
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.94),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.98)),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF101828).withValues(alpha: 0.15),
-                  blurRadius: 34,
-                  offset: const Offset(0, 18),
-                ),
-              ],
+      padding: EdgeInsets.fromLTRB(12, 0, 12, bottomSafe > 0 ? 8 : 10),
+      child: Container(
+        height: dockHeight,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: const Color(0xFFE8EEF7)),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFF101828).withValues(alpha: 0.08),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
             ),
-            child: Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: horizontalPadding,
-                vertical: compact ? 7 : 8,
-              ),
-              child: Row(
-                children: [
-                  for (int i = 0; i < items.length; i++)
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: compact ? 2 : 3,
-                        ),
-                        child: _DockItem(
-                          accent: accent,
-                          item: items[i],
-                          selected: i == selectedIndex,
-                          compact: compact,
-                          onTap: () => onTap(i),
+          ],
+        ),
+        child: Padding(
+          padding: EdgeInsets.symmetric(
+            horizontal: horizontalPadding,
+            vertical: compact ? 7 : 8,
+          ),
+          child: scrollable
+              ? ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  physics: const ClampingScrollPhysics(),
+                  itemCount: items.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 7),
+                  itemBuilder: (context, i) => SizedBox(
+                    width: compact ? 66 : 74,
+                    child: _DockItem(
+                      accent: accent,
+                      item: items[i],
+                      selected: i == selectedIndex,
+                      compact: compact,
+                      onTap: () => onTap(i),
+                    ),
+                  ),
+                )
+              : Row(
+                  children: [
+                    for (int i = 0; i < items.length; i++)
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.symmetric(
+                            horizontal: compact ? 2 : 3,
+                          ),
+                          child: _DockItem(
+                            accent: accent,
+                            item: items[i],
+                            selected: i == selectedIndex,
+                            compact: compact,
+                            onTap: () => onTap(i),
+                          ),
                         ),
                       ),
-                    ),
-                ],
-              ),
-            ),
-          ),
+                  ],
+                ),
         ),
       ),
     );
@@ -765,27 +592,17 @@ class _DockItem extends StatelessWidget {
       curve: Curves.easeOutCubic,
       height: double.infinity,
       decoration: BoxDecoration(
-        gradient: selected
-            ? LinearGradient(
-                colors: [
-                  accent.withValues(alpha: 0.18),
-                  accent.withValues(alpha: 0.07),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              )
-            : null,
-        color: selected ? null : Colors.transparent,
-        borderRadius: BorderRadius.circular(21),
+        color: selected ? accent.withValues(alpha: 0.10) : Colors.transparent,
+        borderRadius: BorderRadius.circular(19),
         border: Border.all(
-          color: selected ? accent.withValues(alpha: 0.18) : Colors.transparent,
+          color: selected ? accent.withValues(alpha: 0.12) : Colors.transparent,
         ),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(21),
+          borderRadius: BorderRadius.circular(19),
           child: Padding(
             padding: EdgeInsets.symmetric(
               horizontal: compact ? 3 : 5,
@@ -796,24 +613,17 @@ class _DockItem extends StatelessWidget {
               children: [
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 230),
-                  width: compact ? 32 : 36,
-                  height: compact ? 32 : 36,
+                  width: compact ? 33 : 37,
+                  height: compact ? 33 : 37,
                   decoration: BoxDecoration(
-                    gradient: selected
-                        ? LinearGradient(
-                            colors: [accent, AppTheme.cyan, AppTheme.green],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          )
-                        : null,
-                    color: selected ? null : const Color(0xFFF1F5F9),
+                    color: selected ? accent : const Color(0xFFF1F5F9),
                     borderRadius: BorderRadius.circular(13),
                     boxShadow: selected
                         ? [
                             BoxShadow(
-                              color: accent.withValues(alpha: 0.26),
-                              blurRadius: 14,
-                              offset: const Offset(0, 7),
+                              color: accent.withValues(alpha: 0.18),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
                             ),
                           ]
                         : null,

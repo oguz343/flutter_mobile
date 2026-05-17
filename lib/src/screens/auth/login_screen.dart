@@ -21,6 +21,10 @@ class _LoginScreenState extends State<LoginScreen>
 
   final TextEditingController _numberController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final FocusNode _numberFocus = FocusNode();
+  final FocusNode _passwordFocus = FocusNode();
+  final GlobalKey _numberFieldKey = GlobalKey();
+  final GlobalKey _passwordFieldKey = GlobalKey();
 
   late final AnimationController _ambientController;
   late final AnimationController _panelController;
@@ -29,6 +33,7 @@ class _LoginScreenState extends State<LoginScreen>
   bool _loading = false;
   bool _obscure = true;
   String _error = '';
+  bool _inputFocused = false;
 
   final List<_RoleOption> _roles = const [
     _RoleOption(
@@ -73,15 +78,59 @@ class _LoginScreenState extends State<LoginScreen>
       vsync: this,
       duration: const Duration(milliseconds: 850),
     )..forward();
+
+    _numberFocus.addListener(_handleInputFocus);
+    _passwordFocus.addListener(_handleInputFocus);
   }
 
   @override
   void dispose() {
     _ambientController.dispose();
     _panelController.dispose();
+    _numberFocus.dispose();
+    _passwordFocus.dispose();
     _numberController.dispose();
     _passwordController.dispose();
     super.dispose();
+  }
+
+  void _handleInputFocus() {
+    final focused = _numberFocus.hasFocus || _passwordFocus.hasFocus;
+
+    if (focused == _inputFocused || !mounted) {
+      return;
+    }
+
+    setState(() => _inputFocused = focused);
+
+    if (focused) {
+      _keepFocusedFieldAboveKeyboard();
+    }
+  }
+
+  void _keepFocusedFieldAboveKeyboard() {
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future<void>.delayed(const Duration(milliseconds: 90));
+
+      if (!mounted) {
+        return;
+      }
+
+      final context = _passwordFocus.hasFocus
+          ? _passwordFieldKey.currentContext
+          : _numberFieldKey.currentContext;
+
+      if (context == null || !context.mounted) {
+        return;
+      }
+
+      await Scrollable.ensureVisible(
+        context,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOutCubic,
+        alignment: 0.28,
+      );
+    });
   }
 
   Future<void> _login() async {
@@ -134,11 +183,35 @@ class _LoginScreenState extends State<LoginScreen>
     final role = _selectedRole;
     final size = MediaQuery.sizeOf(context);
     final compact = size.width < 760;
+    final keyboardOpen =
+        _inputFocused || MediaQuery.viewInsetsOf(context).bottom > 0;
+    _syncAmbientAnimation(enabled: !compact && !keyboardOpen);
 
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       body: AnimatedBuilder(
         animation: _ambientController,
-        builder: (context, _) {
+        child: _LoginContent(
+          roles: _roles,
+          role: _role,
+          selectedRole: role,
+          numberController: _numberController,
+          passwordController: _passwordController,
+          numberFocus: _numberFocus,
+          passwordFocus: _passwordFocus,
+          numberFieldKey: _numberFieldKey,
+          passwordFieldKey: _passwordFieldKey,
+          loading: _loading,
+          obscure: _obscure,
+          error: _error,
+          panelController: _panelController,
+          onRoleChanged: _changeRole,
+          onToggleObscure: () {
+            setState(() => _obscure = !_obscure);
+          },
+          onLogin: _login,
+        ),
+        builder: (context, child) {
           final t = _ambientController.value * pi * 2;
 
           return Container(
@@ -165,12 +238,21 @@ class _LoginScreenState extends State<LoginScreen>
             ),
             child: Stack(
               children: [
+                Positioned.fill(
+                  child: CustomPaint(
+                    painter: _LoginBackdropPainter(
+                      color: role.gradient.first,
+                      secondary: role.gradient.last,
+                    ),
+                  ),
+                ),
                 Positioned(
                   left: -90 + sin(t) * 28,
                   top: 80 + cos(t) * 18,
                   child: _GlowBlob(
                     color: role.gradient.first,
                     size: compact ? 220 : 340,
+                    opacity: keyboardOpen && compact ? 0.10 : 0.20,
                   ),
                 ),
                 Positioned(
@@ -179,6 +261,7 @@ class _LoginScreenState extends State<LoginScreen>
                   child: _GlowBlob(
                     color: role.gradient.last,
                     size: compact ? 260 : 390,
+                    opacity: keyboardOpen && compact ? 0.10 : 0.20,
                   ),
                 ),
                 Positioned(
@@ -190,114 +273,183 @@ class _LoginScreenState extends State<LoginScreen>
                     opacity: 0.08,
                   ),
                 ),
-                SafeArea(
-                  child: Center(
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      keyboardDismissBehavior:
-                          ScrollViewKeyboardDismissBehavior.onDrag,
-                      padding: EdgeInsets.fromLTRB(
-                        compact ? 16 : 34,
-                        18,
-                        compact ? 16 : 34,
-                        24,
-                      ),
-                      child: FadeTransition(
-                        opacity: CurvedAnimation(
-                          parent: _panelController,
-                          curve: Curves.easeOut,
-                        ),
-                        child: SlideTransition(
-                          position:
-                              Tween<Offset>(
-                                begin: const Offset(0, 0.08),
-                                end: Offset.zero,
-                              ).animate(
-                                CurvedAnimation(
-                                  parent: _panelController,
-                                  curve: Curves.easeOutCubic,
-                                ),
-                              ),
-                          child: ConstrainedBox(
-                            constraints: const BoxConstraints(maxWidth: 1100),
-                            child: compact
-                                ? Column(
-                                    children: [
-                                      _BrandPanel(role: role, compact: true),
-                                      const SizedBox(height: 16),
-                                      _LoginCard(
-                                        roles: _roles,
-                                        role: _role,
-                                        selectedRole: role,
-                                        numberController: _numberController,
-                                        passwordController: _passwordController,
-                                        loading: _loading,
-                                        obscure: _obscure,
-                                        error: _error,
-                                        onRoleChanged: (value) {
-                                          setState(() {
-                                            _role = value;
-                                            _error = '';
-                                            _numberController.clear();
-                                            _passwordController.clear();
-                                          });
-                                        },
-                                        onToggleObscure: () {
-                                          setState(() => _obscure = !_obscure);
-                                        },
-                                        onLogin: _login,
-                                      ),
-                                    ],
-                                  )
-                                : Row(
-                                    children: [
-                                      Expanded(
-                                        child: _BrandPanel(
-                                          role: role,
-                                          compact: false,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 24),
-                                      SizedBox(
-                                        width: 440,
-                                        child: _LoginCard(
-                                          roles: _roles,
-                                          role: _role,
-                                          selectedRole: role,
-                                          numberController: _numberController,
-                                          passwordController:
-                                              _passwordController,
-                                          loading: _loading,
-                                          obscure: _obscure,
-                                          error: _error,
-                                          onRoleChanged: (value) {
-                                            setState(() {
-                                              _role = value;
-                                              _error = '';
-                                              _numberController.clear();
-                                              _passwordController.clear();
-                                            });
-                                          },
-                                          onToggleObscure: () {
-                                            setState(
-                                              () => _obscure = !_obscure,
-                                            );
-                                          },
-                                          onLogin: _login,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
+                child!,
               ],
             ),
           );
         },
+      ),
+    );
+  }
+
+  void _changeRole(String value) {
+    if (value == _role) {
+      return;
+    }
+
+    setState(() {
+      _role = value;
+      _error = '';
+      _numberController.clear();
+      _passwordController.clear();
+    });
+  }
+
+  void _syncAmbientAnimation({required bool enabled}) {
+    if (enabled == _ambientController.isAnimating) {
+      return;
+    }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      if (enabled && !_ambientController.isAnimating) {
+        _ambientController.repeat();
+      } else if (!enabled && _ambientController.isAnimating) {
+        _ambientController.stop();
+      }
+    });
+  }
+}
+
+class _LoginContent extends StatelessWidget {
+  final List<_RoleOption> roles;
+  final String role;
+  final _RoleOption selectedRole;
+  final TextEditingController numberController;
+  final TextEditingController passwordController;
+  final FocusNode numberFocus;
+  final FocusNode passwordFocus;
+  final GlobalKey numberFieldKey;
+  final GlobalKey passwordFieldKey;
+  final bool loading;
+  final bool obscure;
+  final String error;
+  final AnimationController panelController;
+  final ValueChanged<String> onRoleChanged;
+  final VoidCallback onToggleObscure;
+  final VoidCallback onLogin;
+
+  const _LoginContent({
+    required this.roles,
+    required this.role,
+    required this.selectedRole,
+    required this.numberController,
+    required this.passwordController,
+    required this.numberFocus,
+    required this.passwordFocus,
+    required this.numberFieldKey,
+    required this.passwordFieldKey,
+    required this.loading,
+    required this.obscure,
+    required this.error,
+    required this.panelController,
+    required this.onRoleChanged,
+    required this.onToggleObscure,
+    required this.onLogin,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final size = MediaQuery.sizeOf(context);
+    final compact = size.width < 760;
+    final keyboardOpen =
+        compact && MediaQuery.viewInsetsOf(context).bottom > 120;
+
+    return SafeArea(
+      child: Center(
+        child: SingleChildScrollView(
+          physics: const ClampingScrollPhysics(),
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          padding: EdgeInsets.fromLTRB(
+            compact ? 14 : 34,
+            keyboardOpen ? 10 : 18,
+            compact ? 14 : 34,
+            keyboardOpen ? 18 : 24,
+          ),
+          child: FadeTransition(
+            opacity: CurvedAnimation(
+              parent: panelController,
+              curve: Curves.easeOut,
+            ),
+            child: SlideTransition(
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(0, 0.04),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(
+                      parent: panelController,
+                      curve: Curves.easeOutCubic,
+                    ),
+                  ),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1100),
+                child: compact
+                    ? Column(
+                        children: [
+                          keyboardOpen
+                              ? _CompactBrandStrip(role: selectedRole)
+                              : _BrandPanel(role: selectedRole, compact: true),
+                          SizedBox(height: keyboardOpen ? 10 : 16),
+                          _LoginCard(
+                            roles: roles,
+                            role: role,
+                            selectedRole: selectedRole,
+                            numberController: numberController,
+                            passwordController: passwordController,
+                            numberFocus: numberFocus,
+                            passwordFocus: passwordFocus,
+                            numberFieldKey: numberFieldKey,
+                            passwordFieldKey: passwordFieldKey,
+                            loading: loading,
+                            obscure: obscure,
+                            error: error,
+                            keyboardOpen: keyboardOpen,
+                            onRoleChanged: onRoleChanged,
+                            onToggleObscure: onToggleObscure,
+                            onLogin: onLogin,
+                          ),
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          Expanded(
+                            child: _BrandPanel(
+                              role: selectedRole,
+                              compact: false,
+                            ),
+                          ),
+                          const SizedBox(width: 24),
+                          SizedBox(
+                            width: 440,
+                            child: _LoginCard(
+                              roles: roles,
+                              role: role,
+                              selectedRole: selectedRole,
+                              numberController: numberController,
+                              passwordController: passwordController,
+                              numberFocus: numberFocus,
+                              passwordFocus: passwordFocus,
+                              numberFieldKey: numberFieldKey,
+                              passwordFieldKey: passwordFieldKey,
+                              loading: loading,
+                              obscure: obscure,
+                              error: error,
+                              keyboardOpen: false,
+                              onRoleChanged: onRoleChanged,
+                              onToggleObscure: onToggleObscure,
+                              onLogin: onLogin,
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -315,14 +467,21 @@ class _BrandPanel extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.all(compact ? 22 : 34),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: compact ? 0.10 : 0.08),
-        borderRadius: BorderRadius.circular(38),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+        gradient: LinearGradient(
+          colors: [
+            Colors.white.withValues(alpha: compact ? 0.16 : 0.13),
+            Colors.white.withValues(alpha: compact ? 0.07 : 0.05),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(34),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.22)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.18),
-            blurRadius: 36,
-            offset: const Offset(0, 18),
+            color: Colors.black.withValues(alpha: 0.16),
+            blurRadius: 34,
+            offset: const Offset(0, 16),
           ),
         ],
       ),
@@ -352,6 +511,10 @@ class _BrandPanel extends StatelessWidget {
             ),
           ),
           SizedBox(height: compact ? 24 : 42),
+          if (!compact) ...[
+            _RoleShowcase(role: role),
+            const SizedBox(height: 18),
+          ],
           Wrap(
             spacing: 10,
             runSpacing: 10,
@@ -382,6 +545,72 @@ class _BrandPanel extends StatelessWidget {
               ],
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _CompactBrandStrip extends StatelessWidget {
+  final _RoleOption role;
+
+  const _CompactBrandStrip({required this.role});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.16)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: role.gradient,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Icon(role.icon, color: Colors.white, size: 23),
+          ),
+          const SizedBox(width: 11),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Okul Yönetimi',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                    letterSpacing: 0,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${role.label} girişi',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.72),
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -454,9 +683,14 @@ class _LoginCard extends StatelessWidget {
   final _RoleOption selectedRole;
   final TextEditingController numberController;
   final TextEditingController passwordController;
+  final FocusNode numberFocus;
+  final FocusNode passwordFocus;
+  final GlobalKey numberFieldKey;
+  final GlobalKey passwordFieldKey;
   final bool loading;
   final bool obscure;
   final String error;
+  final bool keyboardOpen;
   final ValueChanged<String> onRoleChanged;
   final VoidCallback onToggleObscure;
   final VoidCallback onLogin;
@@ -467,9 +701,14 @@ class _LoginCard extends StatelessWidget {
     required this.selectedRole,
     required this.numberController,
     required this.passwordController,
+    required this.numberFocus,
+    required this.passwordFocus,
+    required this.numberFieldKey,
+    required this.passwordFieldKey,
     required this.loading,
     required this.obscure,
     required this.error,
+    required this.keyboardOpen,
     required this.onRoleChanged,
     required this.onToggleObscure,
     required this.onLogin,
@@ -480,16 +719,16 @@ class _LoginCard extends StatelessWidget {
     final isAdmin = AppHelpers.normalizeKey(role) == 'admin';
 
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: EdgeInsets.all(keyboardOpen ? 18 : 20),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.96),
-        borderRadius: BorderRadius.circular(38),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.9)),
+        color: Colors.white.withValues(alpha: 0.98),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: Colors.white),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.22),
-            blurRadius: 44,
-            offset: const Offset(0, 24),
+            color: Colors.black.withValues(alpha: 0.18),
+            blurRadius: 34,
+            offset: const Offset(0, 18),
           ),
         ],
       ),
@@ -497,29 +736,38 @@ class _LoginCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _LoginHeader(role: selectedRole),
-          const SizedBox(height: 18),
+          SizedBox(height: keyboardOpen ? 10 : 18),
           _RoleGrid(roles: roles, selected: role, onChanged: onRoleChanged),
-          const SizedBox(height: 18),
+          SizedBox(height: keyboardOpen ? 10 : 18),
+          _FormAccentLine(colors: selectedRole.gradient),
+          SizedBox(height: keyboardOpen ? 12 : 16),
           if (error.isNotEmpty) ...[
             _ErrorBanner(text: error),
             const SizedBox(height: 14),
           ],
           TextField(
+            key: numberFieldKey,
             controller: numberController,
-            keyboardType: isAdmin ? TextInputType.text : TextInputType.number,
+            focusNode: numberFocus,
+            scrollPadding: const EdgeInsets.only(bottom: 260),
+            keyboardType: const TextInputType.numberWithOptions(
+              signed: false,
+              decimal: false,
+            ),
             textInputAction: TextInputAction.next,
-            inputFormatters: isAdmin
-                ? null
-                : [FilteringTextInputFormatter.digitsOnly],
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: InputDecoration(
               labelText: isAdmin ? 'Admin No' : 'Numara',
               hintText: isAdmin ? '0000' : 'Okul / kullanıcı numarası',
               prefixIcon: const Icon(Icons.tag_rounded),
             ),
           ),
-          const SizedBox(height: 13),
+          SizedBox(height: keyboardOpen ? 11 : 13),
           TextField(
+            key: passwordFieldKey,
             controller: passwordController,
+            focusNode: passwordFocus,
+            scrollPadding: const EdgeInsets.only(bottom: 220),
             obscureText: obscure,
             keyboardType: TextInputType.visiblePassword,
             textInputAction: TextInputAction.done,
@@ -538,7 +786,7 @@ class _LoginCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          SizedBox(height: keyboardOpen ? 6 : 10),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton.icon(
@@ -555,7 +803,7 @@ class _LoginCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          SizedBox(height: keyboardOpen ? 6 : 8),
           SizedBox(
             width: double.infinity,
             height: 58,
@@ -612,9 +860,145 @@ class _LoginCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 16),
-          _SecurityNote(color: selectedRole.gradient.first),
+          if (!keyboardOpen) ...[
+            const SizedBox(height: 16),
+            _SecurityNote(color: selectedRole.gradient.first),
+          ],
         ],
+      ),
+    );
+  }
+}
+
+class _LoginBackdropPainter extends CustomPainter {
+  final Color color;
+  final Color secondary;
+
+  const _LoginBackdropPainter({required this.color, required this.secondary});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final linePaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.055)
+      ..strokeWidth = 1;
+
+    const gap = 28.0;
+    for (double x = -size.height; x < size.width; x += gap) {
+      canvas.drawLine(
+        Offset(x, 0),
+        Offset(x + size.height * 0.52, size.height * 0.52),
+        linePaint,
+      );
+    }
+
+    final wavePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4
+      ..shader = LinearGradient(
+        colors: [
+          color.withValues(alpha: 0.22),
+          secondary.withValues(alpha: 0.10),
+          Colors.transparent,
+        ],
+      ).createShader(Offset.zero & size);
+
+    final path = Path()
+      ..moveTo(-20, size.height * 0.34)
+      ..cubicTo(
+        size.width * 0.28,
+        size.height * 0.22,
+        size.width * 0.58,
+        size.height * 0.48,
+        size.width + 24,
+        size.height * 0.30,
+      );
+
+    canvas.drawPath(path, wavePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _LoginBackdropPainter oldDelegate) {
+    return oldDelegate.color != color || oldDelegate.secondary != secondary;
+  }
+}
+
+class _RoleShowcase extends StatelessWidget {
+  final _RoleOption role;
+
+  const _RoleShowcase({required this.role});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 54,
+            height: 54,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(19),
+            ),
+            child: Icon(role.icon, color: Colors.white, size: 29),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '${role.label} çalışma alanı',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15,
+                    letterSpacing: 0,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  'Duyuru, ödev, teslim ve takip akışı tek ekranda hazır.',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.74),
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12,
+                    height: 1.35,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Icon(Icons.arrow_forward_rounded, color: Colors.white),
+        ],
+      ),
+    );
+  }
+}
+
+class _FormAccentLine extends StatelessWidget {
+  final List<Color> colors;
+
+  const _FormAccentLine({required this.colors});
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(999),
+      child: SizedBox(
+        height: 5,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [colors.first, AppTheme.cyan, colors.last],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -712,9 +1096,11 @@ class _RoleGrid extends StatelessWidget {
                   )
                 : null,
             color: active ? null : const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: active ? Colors.transparent : AppTheme.line,
+              color: active
+                  ? Colors.white.withValues(alpha: 0.34)
+                  : AppTheme.line,
             ),
             boxShadow: active
                 ? [
@@ -729,7 +1115,7 @@ class _RoleGrid extends StatelessWidget {
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(18),
               onTap: () => onChanged(role.label),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 13),
@@ -751,6 +1137,20 @@ class _RoleGrid extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (active)
+                      Container(
+                        width: 20,
+                        height: 20,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.20),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.check_rounded,
+                          color: Colors.white,
+                          size: 14,
+                        ),
+                      ),
                   ],
                 ),
               ),

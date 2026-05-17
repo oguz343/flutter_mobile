@@ -1,9 +1,10 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 
 import '../../core/app_helpers.dart';
 import '../../core/app_theme.dart';
 import '../../models/announcement_model.dart';
 import '../../services/admin_school_service.dart';
+import '../../widgets/app_confirm_dialog.dart';
 
 class AdminAnnouncementsPage extends StatelessWidget {
   final Color accent;
@@ -72,31 +73,16 @@ class AdminAnnouncementsPage extends StatelessWidget {
                       item: item,
                       accent: accent,
                       onDelete: () async {
-                        final ok = await showDialog<bool>(
+                        final ok = await showAppConfirmDialog(
                           context: context,
-                          builder: (context) {
-                            return AlertDialog(
-                              title: const Text('Duyuru silinsin mi?'),
-                              content: Text(
-                                '${item.title} duyurusu pasif hale getirilecek.',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(false),
-                                  child: const Text('Vazgeç'),
-                                ),
-                                FilledButton(
-                                  onPressed: () =>
-                                      Navigator.of(context).pop(true),
-                                  child: const Text('Sil'),
-                                ),
-                              ],
-                            );
-                          },
+                          title: 'Duyuru pasife alınsın mı?',
+                          message:
+                              '${item.title} duyurusu panellerde aktif görünmeyecek.',
+                          confirmText: 'Pasife Al',
+                          icon: Icons.campaign_rounded,
                         );
 
-                        if (ok == true) {
+                        if (ok) {
                           await service.deleteAnnouncement(item);
                         }
                       },
